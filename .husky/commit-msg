@@ -1,0 +1,1 @@
+npx --yes pnpm@11.9.0 exec commitlint --edit "$1"

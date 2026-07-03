@@ -1,0 +1,38 @@
+{
+  "name": "@note-taking-app/backend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prisma:generate": "prisma generate"
+  },
+  "dependencies": {
+    "@note-taking-app/shared": "workspace:*",
+    "@prisma/client": "7.8.0",
+    "bcrypt": "6.0.0",
+    "cors": "2.8.6",
+    "dotenv": "17.4.2",
+    "express": "5.2.1",
+    "jsonwebtoken": "9.0.3",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "6.0.0",
+    "@types/cors": "2.8.19",
+    "@types/express": "5.0.6",
+    "@types/jsonwebtoken": "9.0.10",
+    "@types/node": "22.20.0",
+    "@types/supertest": "7.2.0",
+    "prisma": "7.8.0",
+    "supertest": "7.2.2",
+    "tsx": "4.22.5",
+    "typescript": "6.0.3",
+    "vitest": "4.1.9"
+  }
+}

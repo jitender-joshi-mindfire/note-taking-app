@@ -1,0 +1,3 @@
+npx --yes pnpm@11.9.0 run build
+npx --yes pnpm@11.9.0 run lint
+npx --yes pnpm@11.9.0 run test
