@@ -1,12 +1,12 @@
 ## 1. Foundation
 
-- [ ] 1.1 Add `User` and `RefreshToken` models to `backend/prisma/schema.prisma`
-- [ ] 1.2 Run `prisma migrate dev` to create and apply the migration, regenerate the Prisma client
-- [ ] 1.3 Add `packages/shared/src/auth.ts`: `registerSchema` (with `superRefine` password check),
+- [x] 1.1 Add `User` and `RefreshToken` models to `backend/prisma/schema.prisma`
+- [x] 1.2 Run `prisma migrate dev` to create and apply the migration, regenerate the Prisma client
+- [x] 1.3 Add `packages/shared/src/auth.ts`: `registerSchema` (with `superRefine` password check),
       `loginSchema`, `logoutSchema`, `refreshSchema`, `AuthUser`/`AuthTokens` types
-- [ ] 1.4 Export `auth.ts` from `packages/shared/src/index.ts`
-- [ ] 1.5 Add `express-rate-limit@8.5.2` to `backend/package.json` (pinned)
-- [ ] 1.6 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test` → all green
+- [x] 1.4 Export `auth.ts` from `packages/shared/src/index.ts`
+- [x] 1.5 Add `express-rate-limit@8.5.2` to `backend/package.json` (pinned)
+- [x] 1.6 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test` → all green
 
 ## 2. Core Implementation
 
