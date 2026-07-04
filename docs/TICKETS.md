@@ -10,7 +10,7 @@ and the linked GitHub issue.
 | Ticket | Scope | FRS Sections | Domain | Status | Issue |
 |---|---|---|---|---|---|
 | AB-1001 | Project setup — monorepo, Prisma, CLAUDE.md files, agents, skills, MCPs | — (infra) | infra | Done | [#1](https://github.com/jitender-joshi-mindfire/note-taking-app/issues/1) |
-| AB-1002 | Auth — register, login, logout, JWT + refresh token | 3.1, 3.2, 3.3 | backend | Not started | [#3](https://github.com/jitender-joshi-mindfire/note-taking-app/issues/3) |
+| AB-1002 | Auth — register, login, logout, JWT + refresh token | 3.1, 3.2, 3.3, 3.5 | backend | In progress | [#3](https://github.com/jitender-joshi-mindfire/note-taking-app/issues/3) |
 | AB-1003 | Auth — forgot password + OTP reset | 3.4 | backend | Not started | [#4](https://github.com/jitender-joshi-mindfire/note-taking-app/issues/4) |
 | AB-1004 | Notes — full CRUD + soft delete | 4.1, 4.2, 4.3, 4.4 | backend | Not started | [#5](https://github.com/jitender-joshi-mindfire/note-taking-app/issues/5) |
 | AB-1005 | Notes — pagination, sorting, tag filtering | 4.5, 4.6 | backend | Not started | [#6](https://github.com/jitender-joshi-mindfire/note-taking-app/issues/6) |
