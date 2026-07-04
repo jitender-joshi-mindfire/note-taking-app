@@ -41,22 +41,23 @@ AB-1010), so there's no independent domain to split across worktrees.
 
 ## 3. Tests (one per spec scenario)
 
-- [ ] 3.1 Test: Successful registration
-- [ ] 3.2 Test: Duplicate email rejected
-- [ ] 3.3 Test: Invalid email format rejected
-- [ ] 3.4 Test: Weak password lists every violated rule
-- [ ] 3.5 Test: Successful login issues tokens
-- [ ] 3.6 Test: Wrong credentials return a generic error
-- [ ] 3.7 Test: Missing fields rejected
-- [ ] 3.8 Test: Logout revokes the refresh token
-- [ ] 3.9 Test: Revoked refresh token cannot be reused
-- [ ] 3.10 Test: Logout without a valid access token is rejected
-- [ ] 3.11 Test: Refreshing rotates the token
-- [ ] 3.12 Test: Reusing a rotated refresh token revokes all sessions
-- [ ] 3.13 Test: Excessive login attempts rejected
-- [ ] 3.14 Test: Excessive registration attempts rejected
-- [ ] 3.15 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`,
-      `pnpm test --coverage` → all green, ≥80% coverage on new code
+- [x] 3.1 Test: Successful registration
+- [x] 3.2 Test: Duplicate email rejected
+- [x] 3.3 Test: Invalid email format rejected
+- [x] 3.4 Test: Weak password lists every violated rule
+- [x] 3.5 Test: Successful login issues tokens
+- [x] 3.6 Test: Wrong credentials return a generic error
+- [x] 3.7 Test: Missing fields rejected
+- [x] 3.8 Test: Logout revokes the refresh token
+- [x] 3.9 Test: Revoked refresh token cannot be reused
+- [x] 3.10 Test: Logout without a valid access token is rejected
+- [x] 3.11 Test: Refreshing rotates the token
+- [x] 3.12 Test: Reusing a rotated refresh token revokes all sessions
+- [x] 3.13 Test: Excessive login attempts rejected
+- [x] 3.14 Test: Excessive registration attempts rejected
+- [x] 3.15 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`,
+      `pnpm test --coverage` → all green, ≥80% coverage on new code (achieved 84.96%
+      statements/lines, 90.47% functions)
 
 ## 4. Archive
 
