@@ -1,0 +1,39 @@
+# Tickets
+
+The fixed build order for this project. Build strictly in this order — no skipping, no
+reordering. `/spec <ticket-id>` reads this file first to know what a ticket ID actually means —
+the ID itself (`AB-xxxx`) carries no meaning on its own; this file is the mapping.
+
+Each row: ticket ID, one-line scope, the `docs/FRS.md` sections it implements, domain, status,
+and the linked GitHub issue.
+
+| Ticket | Scope | FRS Sections | Domain | Status | Issue |
+|---|---|---|---|---|---|
+| AB-1001 | Project setup — monorepo, Prisma, CLAUDE.md files, agents, skills, MCPs | — (infra) | infra | Done | [#1](https://github.com/jitender-joshi-mindfire/note-taking-app/issues/1) |
+| AB-1002 | Auth — register, login, logout, JWT + refresh token | 3.1, 3.2, 3.3 | backend | Not started | [#3](https://github.com/jitender-joshi-mindfire/note-taking-app/issues/3) |
+| AB-1003 | Auth — forgot password + OTP reset | 3.4 | backend | Not started | [#4](https://github.com/jitender-joshi-mindfire/note-taking-app/issues/4) |
+| AB-1004 | Notes — full CRUD + soft delete | 4.1, 4.2, 4.3, 4.4 | backend | Not started | [#5](https://github.com/jitender-joshi-mindfire/note-taking-app/issues/5) |
+| AB-1005 | Notes — pagination, sorting, tag filtering | 4.5, 4.6 | backend | Not started | [#6](https://github.com/jitender-joshi-mindfire/note-taking-app/issues/6) |
+| AB-1006 | Tags — CRUD + note count per tag | 5.1, 5.2 | backend | Not started | [#7](https://github.com/jitender-joshi-mindfire/note-taking-app/issues/7) |
+| AB-1007 | Search — full-text with highlight + pagination | 6.1, 6.2, 6.3 | backend | Not started | [#8](https://github.com/jitender-joshi-mindfire/note-taking-app/issues/8) |
+| AB-1008 | Sharing — generate link, revoke, public access, atomic view count | 7.1, 7.2, 7.3, 7.4 | backend | Not started | [#9](https://github.com/jitender-joshi-mindfire/note-taking-app/issues/9) |
+| AB-1009 | Version history — snapshot, list, view, restore, auto-purge | 8.1, 8.2, 8.3, 8.4, 8.5 | backend | Not started | [#10](https://github.com/jitender-joshi-mindfire/note-taking-app/issues/10) |
+| AB-1010 | Frontend — Auth pages | 3.1, 3.2, 3.3, 3.4 | frontend | Not started | [#11](https://github.com/jitender-joshi-mindfire/note-taking-app/issues/11) |
+| AB-1011 | Frontend — Notes list page | 4.2, 4.5, 4.6 | frontend | Not started | [#12](https://github.com/jitender-joshi-mindfire/note-taking-app/issues/12) |
+| AB-1012 | Frontend — Note editor with TipTap + autosave | 4.1, 4.3 | frontend | Not started | [#13](https://github.com/jitender-joshi-mindfire/note-taking-app/issues/13) |
+| AB-1013 | Frontend — Search UI with highlights | 6.1, 6.2, 6.3 | frontend | Not started | [#14](https://github.com/jitender-joshi-mindfire/note-taking-app/issues/14) |
+| AB-1014 | Frontend — Share modal + active links | 7.1, 7.2, 7.3, 7.4 | frontend | Not started | [#15](https://github.com/jitender-joshi-mindfire/note-taking-app/issues/15) |
+| AB-1015 | Frontend — Version history drawer + restore | 8.1, 8.2, 8.3, 8.4 | frontend | Not started | [#16](https://github.com/jitender-joshi-mindfire/note-taking-app/issues/16) |
+| AB-1016 | E2E — Playwright full user journey | all (register → note → tag → search → share → version history) | e2e | Not started | [#17](https://github.com/jitender-joshi-mindfire/note-taking-app/issues/17) |
+
+## Out of Scope (all tickets)
+
+Do not build, on any ticket, anything from `docs/FRS.md` Section 2.2: real-time collaborative
+editing, file/image attachments, a mobile app, OAuth/social login, note folders/nesting, or real
+email sending.
+
+## Notes
+
+- "AB" is not an acronym — it's an arbitrary ticket-prefix carried over verbatim from the
+  original assignment brief. It has no meaning beyond being this project's ticket ID format.
+- Update the `Status` column as tickets complete (`Not started` → `In progress` → `Done`).

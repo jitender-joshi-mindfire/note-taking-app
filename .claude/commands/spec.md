@@ -1,27 +1,33 @@
 Run OpenSpec proposal creation for: $ARGUMENTS
 
+The ticket ID alone (e.g. `AB-1002`) carries no meaning — `docs/TICKETS.md` is what maps it to
+an actual scope and FRS sections. Always resolve the ticket there first.
+
 Steps:
 
-1. Run `openspec list` to see current active changes.
-2. Read `openspec/specs/` (current system state) for any capability this ticket touches or
+1. Read `docs/TICKETS.md` → find this ticket's row. If it's not listed there, STOP and ask the
+   user for the ticket's scope before doing anything else — do not guess or invent one.
+2. Run `openspec list` to see current active changes.
+3. Read `openspec/specs/` (current system state) for any capability this ticket touches or
    modifies.
-3. Read `docs/FRS.md` → find the exact numbered requirements this ticket implements.
-4. Read `docs/SDS.md` → find the relevant design decisions (schema, API contracts) this ticket
+4. Read `docs/FRS.md` → the exact FRS sections listed for this ticket in `docs/TICKETS.md`.
+5. Read `docs/SDS.md` → find the relevant design decisions (schema, API contracts) this ticket
    must conform to.
-5. Read `AGENTS.md` and the relevant domain `CLAUDE.md` for constraints.
-6. Ask clarifying questions — minimum 3, maximum 8. Do not guess at ambiguous requirements;
+6. Read `AGENTS.md` and the relevant domain `CLAUDE.md` for constraints.
+7. Ask clarifying questions — minimum 3, maximum 8. Do not guess at ambiguous requirements;
    these questions catch bugs before a single line of code is written.
-7. If `openspec/changes/$ARGUMENTS/` does not exist yet, run:
-   `openspec new change $ARGUMENTS --description "<one-line ticket summary>"`
-8. Run `openspec instructions proposal --change $ARGUMENTS` and follow its output exactly to
+8. If `openspec/changes/$ARGUMENTS/` does not exist yet, run:
+   `openspec new change $ARGUMENTS --description "<one-line ticket summary from docs/TICKETS.md>"`
+9. Run `openspec instructions proposal --change $ARGUMENTS` and follow its output exactly to
    write `openspec/changes/$ARGUMENTS/proposal.md`. Every capability/spec delta MUST trace to a
    numbered FRS requirement — cite the requirement IDs in the proposal.
-9. Run `openspec instructions specs --change $ARGUMENTS` and follow its output exactly to write
-   the scenario delta file(s) at `openspec/changes/$ARGUMENTS/specs/<capability>/spec.md`
-   (ADDED/MODIFIED/REMOVED, `#### Scenario:` with exactly 4 hashtags, WHEN/THEN format).
-10. Run `openspec validate $ARGUMENTS` — must pass before continuing.
-11. Show the generated `proposal.md` and spec delta in full.
-12. Do NOT proceed to `/plan` or write any implementation code.
+10. Run `openspec instructions specs --change $ARGUMENTS` and follow its output exactly to write
+    the scenario delta file(s) at `openspec/changes/$ARGUMENTS/specs/<capability>/spec.md`
+    (ADDED/MODIFIED/REMOVED, `#### Scenario:` with exactly 4 hashtags, WHEN/THEN format).
+11. Run `openspec validate $ARGUMENTS` — must pass before continuing.
+12. Show the generated `proposal.md` and spec delta in full.
+13. Update this ticket's `Status` to `In progress` in `docs/TICKETS.md`.
+14. Do NOT proceed to `/plan` or write any implementation code.
 
 Ask `[y/n]` before writing `proposal.md` or any spec delta file.
 

@@ -13,7 +13,8 @@ Steps:
 3. Confirm `/review $ARGUMENTS` was run in a fresh terminal and returned all ✅.
 4. Run `git diff main --stat`.
 5. Read `openspec/archive/$ARGUMENTS/proposal.md` and `openspec/archive/$ARGUMENTS/specs/**/*.md`.
-6. Generate the commit message:
+6. Look up this ticket's linked GitHub issue number in `docs/TICKETS.md`.
+7. Generate the commit message:
    ```
    feat(scope): description AB#ticket
 
@@ -22,7 +23,6 @@ Steps:
 
    Relates to AB#XXXX
    ```
-7. Ask: "Run `git add .` && `git commit`? [y/n]"
 8. Generate the PR description:
    ```
    ## What
@@ -37,9 +37,15 @@ Steps:
    -[ ] commitlint: valid
    -[ ] openspec archive complete
    -[ ] Smoke tested locally
-   Reviewers: @team-lead
+
+   Closes #<issue-number-from-docs/TICKETS.md>
    ```
-9. Ask: "Run `git push`? [y/n]"
+9. For this project (note-taking-app), full git autonomy is granted — run `git add .`,
+   `git commit`, `git push`, and `gh pr create --title "..." --body "..."` without asking for
+   `[y/n]` confirmation first. Report back the commit SHA and PR URL once done. (This is a
+   project-specific override — do not assume it applies to other repos.)
+10. Update this ticket's `Status` to `Done` in `docs/TICKETS.md` and include that update in the
+    same commit.
 
 PR description MUST list every FRS requirement covered and every spec scenario tested (no
 exceptions — this is required, not optional, for review).

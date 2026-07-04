@@ -17,6 +17,8 @@ notes. Six feature areas: Auth, Notes CRUD, Tags, Search, Sharing, and Version H
   `backend` and `frontend`
 - `docs/FRS.md` — Functional Requirements Spec (business truth — WHAT to build)
 - `docs/SDS.md` — Software Design Spec (technical truth — schema, API contracts, architecture)
+- `docs/TICKETS.md` — the fixed ticket build order; maps each ticket ID to its scope and FRS
+  sections (ticket IDs alone are meaningless without this file)
 - `docs/decisions/` — Architecture Decision Records
 - `openspec/` — per-ticket living specs (proposal → plan → tasks → archive)
 - `.claude/commands/`, `.claude/agents/` — slash commands and sub-agents for this workflow
