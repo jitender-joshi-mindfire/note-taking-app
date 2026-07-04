@@ -13,23 +13,31 @@
 No `[PARALLEL]` tasks in this ticket — AB-1002 is backend-only (no frontend component; that's
 AB-1010), so there's no independent domain to split across worktrees.
 
-- [ ] 2.1 Add `backend/src/lib/prisma.ts` (Prisma client singleton)
-- [ ] 2.2 Add `backend/src/lib/hash.ts`: `hashPassword`/`comparePassword` (bcrypt),
+- [x] 2.1 Add `backend/src/lib/prisma.ts` (Prisma client singleton) — done in Phase 1, needed
+      early to verify the migration
+- [x] 2.2 Add `backend/src/lib/hash.ts`: `hashPassword`/`comparePassword` (bcrypt),
       `generateRefreshToken`/`hashToken` (crypto)
-- [ ] 2.3 Add `backend/src/lib/jwt.ts`: `signAccessToken`/`verifyAccessToken`
-- [ ] 2.4 Add `backend/src/middleware/requireAuth.ts`
-- [ ] 2.5 Add `backend/src/middleware/rateLimit.ts`: `loginLimiter`, `registerLimiter`
+- [x] 2.3 Add `backend/src/lib/jwt.ts`: `signAccessToken`/`verifyAccessToken`
+- [x] 2.4 Add `backend/src/middleware/requireAuth.ts`
+- [x] 2.5 Add `backend/src/middleware/rateLimit.ts`: `loginLimiter`, `registerLimiter`
       (5 attempts / 15 min, IP-keyed)
-- [ ] 2.6 Add `backend/src/services/AuthService.ts` — `register`: normalize email to lowercase,
+- [x] 2.6 Add `backend/src/services/AuthService.ts` — `register`: normalize email to lowercase,
       check uniqueness, hash password, create user + first refresh token
-- [ ] 2.7 `AuthService.login`: case-insensitive email lookup, compare password, issue
+- [x] 2.7 `AuthService.login`: case-insensitive email lookup, compare password, issue
       access + refresh tokens
-- [ ] 2.8 `AuthService.logout`: verify the refresh token belongs to `req.userId`, revoke it
-- [ ] 2.9 `AuthService.refresh`: rotation + reuse-detection transaction (Decision 2 in `design.md`)
-- [ ] 2.10 Add `backend/src/routes/auth.ts`: wire all 4 endpoints with correct middleware order
+- [x] 2.8 `AuthService.logout`: verify the refresh token belongs to `req.userId`, revoke it
+- [x] 2.9 `AuthService.refresh`: rotation + reuse-detection transaction (Decision 2 in `design.md`)
+- [x] 2.10 Add `backend/src/routes/auth.ts`: wire all 4 endpoints with correct middleware order
       (rate limiter → Zod validation → `requireAuth` where applicable → service call)
-- [ ] 2.11 Wire `express.json()`, `cors`, and the `/api/auth` router into `backend/src/index.ts`
-- [ ] 2.12 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test` → all green
+- [x] 2.11 Add `backend/src/app.ts` (Express app + middleware + routes, separated from
+      `index.ts`'s `app.listen()` so tests can import the app directly — not in the original
+      task list, needed for Phase 3 Supertest tests to work without binding a real port) and
+      wire `express.json()`, `cors`, and the `/api/auth` router into it
+- [x] 2.12 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test` → all green.
+      Also manually smoke-tested all 4 endpoints against a real Postgres instance (register,
+      duplicate/weak-password rejection, case-insensitive login, generic credential errors,
+      requireAuth-gated logout, refresh rotation, reuse detection + mass revocation, rate
+      limiting) — all behaved correctly.
 
 ## 3. Tests (one per spec scenario)
 
