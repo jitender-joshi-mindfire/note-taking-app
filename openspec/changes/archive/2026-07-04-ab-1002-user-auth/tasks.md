@@ -61,5 +61,5 @@ AB-1010), so there's no independent domain to split across worktrees.
 
 ## 4. Archive
 
-- [ ] 4.1 Run `openspec archive ab-1002-user-auth`
-- [ ] 4.2 Update `docs/TICKETS.md` AB-1002 status to `Done`
+- [x] 4.1 Run `openspec archive ab-1002-user-auth`
+- [x] 4.2 Update `docs/TICKETS.md` AB-1002 status to `Done`
