@@ -1,0 +1,48 @@
+schema: spec-driven
+
+context: |
+  Note Taking App — full-stack app where authenticated users create, organize, search, and
+  share notes (auth, notes CRUD, tags, search, sharing, version history). See docs/FRS.md for
+  full functional requirements (numbered acceptance criteria) and docs/SDS.md for the technical
+  design (DB schema, API contracts, architecture decisions).
+
+  Tech stack (fixed, no substitutions):
+  - Frontend: React 19 + TypeScript + Vite + TanStack Query + Zustand + TipTap + shadcn/ui
+  - Backend: Node.js 22 + Express 5 + TypeScript (ESM)
+  - Database: PostgreSQL 16 + Prisma ORM
+  - Auth: JWT access token (15 min) + refresh token (7 days, DB-persisted, rotated on use)
+  - Search: PostgreSQL full-text search only — no external search service
+  - Testing: Vitest + Supertest (backend), Vitest + Testing Library (frontend), Playwright (E2E)
+  - Monorepo: pnpm workspaces (backend, frontend, packages/shared)
+
+  Architectural constraints:
+  - All shared TypeScript types and Zod schemas live in packages/shared only — never duplicated
+    in backend or frontend.
+  - Every resource (notes, tags, versions, share links) is strictly scoped to its owning user;
+    cross-user access returns 404, never 403.
+  - Soft delete only (deletedAt timestamp) — never a physical row delete, 30-day recovery window.
+  - Every note create/update snapshots a NoteVersion in the same transaction (SDS Section 8).
+  - Share link view counts are incremented atomically — never read-then-write.
+
+  Team conventions:
+  - Conventional commits: feat(scope): description AB#ticket — enforced by commitlint.
+  - Branch naming: feature/{domain}/AB-{ticket}-{short-name} or fix/{domain}/AB-{ticket}-{short-name}.
+  - One ticket per Claude session; /clear between tickets; /compact at ~70% context usage.
+
+  Quality standards:
+  - pnpm build → 0 errors, 0 warnings. pnpm lint --max-warnings 0. pnpm test → all green.
+  - ≥80% coverage on new code; exactly one test per spec scenario.
+  - openspec validate must pass before /plan; openspec archive is required before every PR.
+
+rules:
+  proposal:
+    - Every capability or spec delta must trace to a numbered requirement in docs/FRS.md.
+    - Do not invent business rules not present in docs/FRS.md — flag gaps as clarifying
+      questions instead.
+  design:
+    - Must conform to the schema, API contracts, and conventions in docs/SDS.md — do not
+      introduce a new API shape, status code, or DB field without updating docs/SDS.md first.
+  tasks:
+    - Every spec scenario must have exactly one corresponding task to write its test.
+    - Mark independent tasks [PARALLEL] where frontend/backend work can proceed in separate git
+      worktrees.

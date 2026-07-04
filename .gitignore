@@ -9,7 +9,7 @@ coverage/
 playwright-report/
 test-results/
 .turbo/
-apps/backend/generated/
-apps/backend/prisma/dev.db
+backend/generated/
+backend/prisma/dev.db
 session-context.md
 openspec/changes/**/session-context.md
