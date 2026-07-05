@@ -13,7 +13,7 @@ change; `—` means not started yet).
 |---|---|---|---|---|---|---|
 | AB-1001 | Project setup — monorepo, Prisma, CLAUDE.md files, agents, skills, MCPs | — (infra) | infra | Done | [#1](https://github.com/jitender-joshi-mindfire/note-taking-app/issues/1) | — (predates OpenSpec usage) |
 | AB-1002 | Auth — register, login, logout, JWT + refresh token | 3.1, 3.2, 3.3, 3.5 | backend | Done ([#18](https://github.com/jitender-joshi-mindfire/note-taking-app/pull/18) merged) | [#3](https://github.com/jitender-joshi-mindfire/note-taking-app/issues/3) | `ab-1002-user-auth` (archived: `openspec/changes/archive/2026-07-04-ab-1002-user-auth/`) |
-| AB-1003 | Auth — forgot password + OTP reset | 3.4, 3.5 | backend | In progress | [#4](https://github.com/jitender-joshi-mindfire/note-taking-app/issues/4) | `ab-1003-password-reset` |
+| AB-1003 | Auth — forgot password + OTP reset | 3.4, 3.5 | backend | PR open ([#19](https://github.com/jitender-joshi-mindfire/note-taking-app/pull/19)) | [#4](https://github.com/jitender-joshi-mindfire/note-taking-app/issues/4) | `ab-1003-password-reset` (archived: `openspec/changes/archive/2026-07-05-ab-1003-password-reset/`) |
 | AB-1004 | Notes — full CRUD + soft delete | 4.1, 4.2, 4.3, 4.4 | backend | Not started | [#5](https://github.com/jitender-joshi-mindfire/note-taking-app/issues/5) | — |
 | AB-1005 | Notes — pagination, sorting, tag filtering | 4.5, 4.6 | backend | Not started | [#6](https://github.com/jitender-joshi-mindfire/note-taking-app/issues/6) | — |
 | AB-1006 | Tags — CRUD + note count per tag | 5.1, 5.2 | backend | Not started | [#7](https://github.com/jitender-joshi-mindfire/note-taking-app/issues/7) | — |
