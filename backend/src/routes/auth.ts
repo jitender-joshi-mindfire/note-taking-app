@@ -13,6 +13,7 @@ import {
   registerLimiter,
   resetPasswordLimiter,
 } from "../middleware/rateLimit.js";
+import { validationError } from "../lib/validation.js";
 import { requireAuth } from "../middleware/requireAuth.js";
 import {
   confirmPasswordReset,
@@ -30,16 +31,6 @@ import {
 } from "../services/AuthService.js";
 
 export const authRouter: RouterType = Router();
-
-function validationError(message: string, issues: { path: PropertyKey[]; message: string }[]) {
-  return {
-    error: {
-      code: "VALIDATION_ERROR",
-      message,
-      fields: issues.map((issue) => ({ field: issue.path.join("."), message: issue.message })),
-    },
-  };
-}
 
 authRouter.post("/register", registerLimiter, async (req, res) => {
   const parsed = registerSchema.safeParse(req.body);
