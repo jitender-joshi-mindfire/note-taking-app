@@ -39,34 +39,38 @@ No `[PARALLEL]` tasks — AB-1009 is backend-only (no frontend component; that's
 
 **New capability `version-history`** (new file `backend/tests/versions.test.ts`, 10 scenarios):
 
-- [ ] 3.1 Test: Listing returns retained versions newest first
-- [ ] 3.2 Test: Listing versions for a note not owned by the caller returns not found
-- [ ] 3.3 Test: Listing versions for a soft-deleted note returns not found
-- [ ] 3.4 Test: Viewing a retained version returns its full content
-- [ ] 3.5 Test: Viewing a version for a note not owned by the caller returns not found
-- [ ] 3.6 Test: Viewing a version id that belongs to a different note returns not found
-- [ ] 3.7 Test: Restoring a version applies its content as the new current state
-- [ ] 3.8 Test: Restoring creates a new version without altering existing history
-- [ ] 3.9 Test: Restoring a note not owned by the caller returns not found
-- [ ] 3.10 Test: Restoring a version id that belongs to a different note returns not found
+- [x] 3.1 Test: Listing returns retained versions newest first
+- [x] 3.2 Test: Listing versions for a note not owned by the caller returns not found
+- [x] 3.3 Test: Listing versions for a soft-deleted note returns not found
+- [x] 3.4 Test: Viewing a retained version returns its full content
+- [x] 3.5 Test: Viewing a version for a note not owned by the caller returns not found
+- [x] 3.6 Test: Viewing a version id that belongs to a different note returns not found
+- [x] 3.7 Test: Restoring a version applies its content as the new current state
+- [x] 3.8 Test: Restoring creates a new version without altering existing history
+- [x] 3.9 Test: Restoring a note not owned by the caller returns not found
+- [x] 3.10 Test: Restoring a version id that belongs to a different note returns not found
 
 **Modified capability `notes`** (`backend/tests/notes.test.ts`) — 7 of the 8 scenarios below
 already exist and are behaviorally unchanged by this ticket; confirm they still pass rather than
 rewriting them:
 
-- [ ] 3.11 Confirm existing: Partial update applies only the provided fields still passes
-- [ ] 3.12 Confirm existing: Update with no fields rejected still passes
-- [ ] 3.13 Confirm existing: Update creates a version snapshot of the prior state still passes
-- [ ] 3.14 Confirm existing: Updating a note not owned by the caller returns not found still
+- [x] 3.11 Confirm existing: Partial update applies only the provided fields still passes
+- [x] 3.12 Confirm existing: Update with no fields rejected still passes
+- [x] 3.13 Confirm existing: Update creates a version snapshot of the prior state still passes
+- [x] 3.14 Confirm existing: Updating a note not owned by the caller returns not found still
       passes
-- [ ] 3.15 Confirm existing: Providing tagIds replaces the note's tag set still passes
-- [ ] 3.16 Confirm existing: Providing an empty tagIds array clears all tags still passes
-- [ ] 3.17 Confirm existing: tagIds referencing a tag not owned by the caller is rejected still
+- [x] 3.15 Confirm existing: Providing tagIds replaces the note's tag set still passes
+- [x] 3.16 Confirm existing: Providing an empty tagIds array clears all tags still passes
+- [x] 3.17 Confirm existing: tagIds referencing a tag not owned by the caller is rejected still
       passes
-- [ ] 3.18 Test: Version history beyond 50 is automatically purged
+- [x] 3.18 Test: Version history beyond 50 is automatically purged
 
-- [ ] 3.19 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`,
-      `pnpm test --coverage` → all green, ≥80% coverage on new code
+- [x] 3.19 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0` clean,
+      `pnpm --filter backend exec vitest run --coverage` → 101/101 green. Coverage: 92.49%
+      stmts/92.43% lines overall; `NoteService.ts` 100%, `VersionService.ts` 100% (both
+      confirmed via raw coverage-final.json — the text-summary table's printed rows omitted
+      these two files, same v8-reporter display quirk noted in AB-1007/AB-1008) — well above
+      the 80% bar
 
 ## 4. Archive
 
