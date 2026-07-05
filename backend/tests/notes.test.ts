@@ -108,6 +108,87 @@ describe("GET /api/notes", () => {
     expect(res.body.items[0].title).toBe("A's note");
     expect(res.body.items.some((n: { id: string }) => n.id === bNote.body.note.id)).toBe(false);
   });
+
+  it("Custom page size is honored up to the maximum", async () => {
+    const token = await registerAndGetToken("ruth-notes@example.com");
+
+    for (const title of ["N1", "N2", "N3"]) {
+      await request(app)
+        .post("/api/notes")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ title, content: "x" });
+    }
+
+    const res = await request(app)
+      .get("/api/notes?pageSize=2")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.pageSize).toBe(2);
+    expect(res.body.items).toHaveLength(2);
+    expect(res.body.total).toBe(3);
+  });
+
+  it("Page size above the maximum is capped", async () => {
+    const token = await registerAndGetToken("sam-notes2@example.com");
+
+    const res = await request(app)
+      .get("/api/notes?pageSize=500")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.pageSize).toBe(100);
+  });
+
+  it("Sorting by title ascending", async () => {
+    const token = await registerAndGetToken("tina-notes@example.com");
+
+    for (const title of ["Zebra", "Apple", "Mango"]) {
+      await request(app)
+        .post("/api/notes")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ title, content: "x" });
+    }
+
+    const res = await request(app)
+      .get("/api/notes?sortBy=title&sortDir=asc")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.items.map((n: { title: string }) => n.title)).toEqual([
+      "Apple",
+      "Mango",
+      "Zebra",
+    ]);
+  });
+
+  it("Unrecognized sortBy value rejected", async () => {
+    const token = await registerAndGetToken("uma-notes2@example.com");
+
+    const res = await request(app)
+      .get("/api/notes?sortBy=nonsense")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(400);
+  });
+
+  it("Page beyond the last page returns an empty list", async () => {
+    const token = await registerAndGetToken("victor-notes2@example.com");
+
+    await request(app)
+      .post("/api/notes")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ title: "Only note", content: "x" });
+
+    const res = await request(app)
+      .get("/api/notes?page=999")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.items).toHaveLength(0);
+    expect(res.body.total).toBe(1);
+    expect(res.body.page).toBe(999);
+  });
 });
 
 describe("GET /api/notes/:id", () => {

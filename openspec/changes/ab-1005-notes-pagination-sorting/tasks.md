@@ -30,19 +30,20 @@ Three of the eight scenarios below already have passing tests from AB-1004
 (`backend/tests/notes.test.ts`) whose underlying behavior is unchanged by this ticket — confirm
 they still pass as-is rather than rewriting them.
 
-- [ ] 3.1 Test: List returns only the caller's own non-deleted notes (existing AB-1004 test —
-      confirm still passes with default `sortBy=updatedAt&sortDir=desc` now explicit)
-- [ ] 3.2 Test: Custom page size is honored up to the maximum
-- [ ] 3.3 Test: Page size above the maximum is capped
-- [ ] 3.4 Test: Sorting by title ascending
-- [ ] 3.5 Test: Unrecognized sortBy value rejected
-- [ ] 3.6 Test: Page beyond the last page returns an empty list
-- [ ] 3.7 Test: Reading a note not owned by the caller returns not found (existing AB-1004 test —
-      confirm still passes, untouched by this ticket)
-- [ ] 3.8 Test: Reading a soft-deleted note returns not found (existing AB-1004 test — confirm
+- [x] 3.1 Test: List returns only the caller's own non-deleted notes (existing AB-1004 test —
+      confirmed still passes with default `sortBy=updatedAt&sortDir=desc` now explicit)
+- [x] 3.2 Test: Custom page size is honored up to the maximum
+- [x] 3.3 Test: Page size above the maximum is capped
+- [x] 3.4 Test: Sorting by title ascending
+- [x] 3.5 Test: Unrecognized sortBy value rejected
+- [x] 3.6 Test: Page beyond the last page returns an empty list
+- [x] 3.7 Test: Reading a note not owned by the caller returns not found (existing AB-1004 test —
+      confirmed still passes, untouched by this ticket)
+- [x] 3.8 Test: Reading a soft-deleted note returns not found (existing AB-1004 test — confirmed
       still passes, untouched by this ticket)
-- [ ] 3.9 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`,
-      `pnpm test --coverage` → all green, ≥80% coverage on new code
+- [x] 3.9 Checkpoint: `pnpm build` → 0 errors, `pnpm lint` → 0 errors, `pnpm test --coverage` →
+      43/43 green. Coverage: 90% stmts / 89.96% lines overall; `NoteService.ts` 96.29% stmts,
+      `routes/notes.ts` 90.9% stmts — well above the 80% bar for new code
 
 ## 4. Archive
 
