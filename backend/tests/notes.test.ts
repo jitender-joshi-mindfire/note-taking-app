@@ -276,6 +276,48 @@ describe("GET /api/notes", () => {
     const listed = res.body.items.find((n: { id: string }) => n.id === note.body.note.id);
     expect(listed.tags).toEqual([{ id: tagId, name: "Labeled", color: "#ABCDEF" }]);
   });
+
+  it("A note without an active share link has a null shareLink", async () => {
+    const token = await registerAndGetToken("zack-notes@example.com");
+
+    const created = await request(app)
+      .post("/api/notes")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ title: "No link note", content: "x" });
+
+    const res = await request(app)
+      .get(`/api/notes/${created.body.note.id}`)
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.note.shareLink).toBeNull();
+  });
+
+  it("A note with an active share link includes it", async () => {
+    const token = await registerAndGetToken("amber-notes@example.com");
+
+    const created = await request(app)
+      .post("/api/notes")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ title: "Linked note", content: "x" });
+
+    const shareRes = await request(app)
+      .post(`/api/notes/${created.body.note.id}/share`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ expiresInDays: 7 });
+
+    const res = await request(app)
+      .get(`/api/notes/${created.body.note.id}`)
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.note.shareLink).toEqual({
+      token: shareRes.body.token,
+      url: shareRes.body.url,
+      expiresAt: shareRes.body.expiresAt,
+      viewCount: 0,
+    });
+  });
 });
 
 describe("GET /api/notes/:id", () => {
@@ -540,5 +582,26 @@ describe("DELETE /api/notes/:id", () => {
       where: { id: created.body.note.id },
     });
     expect(stillExists.deletedAt).toBeNull();
+  });
+
+  it("Deleting a note revokes its active share link", async () => {
+    const token = await registerAndGetToken("rex-notes@example.com");
+
+    const created = await request(app)
+      .post("/api/notes")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ title: "Note with link", content: "x" });
+
+    const shareRes = await request(app)
+      .post(`/api/notes/${created.body.note.id}/share`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ expiresInDays: 7 });
+
+    await request(app)
+      .delete(`/api/notes/${created.body.note.id}`)
+      .set("Authorization", `Bearer ${token}`);
+
+    const shareGetRes = await request(app).get(`/api/share/${shareRes.body.token}`);
+    expect(shareGetRes.status).toBe(404);
   });
 });

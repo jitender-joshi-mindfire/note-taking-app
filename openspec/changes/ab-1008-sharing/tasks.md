@@ -63,50 +63,54 @@ No `[PARALLEL]` tasks — AB-1008 is backend-only (no frontend component; that's
 
 **New capability `sharing`** (new file `backend/tests/sharing.test.ts`, 14 scenarios):
 
-- [ ] 3.1 Test: Successful link generation for a note with no existing link
-- [ ] 3.2 Test: Generating a link for a note not owned by the caller returns not found
-- [ ] 3.3 Test: expiresInDays out of bounds rejected
-- [ ] 3.4 Test: Generating a new link replaces the existing one
-- [ ] 3.5 Test: Owner revokes their active share link
-- [ ] 3.6 Test: Revoking when no active link exists returns not found
-- [ ] 3.7 Test: Revoking a link for a note not owned by the caller returns not found
-- [ ] 3.8 Test: Valid link returns the note read-only without authentication
-- [ ] 3.9 Test: Unknown token returns not found
-- [ ] 3.10 Test: Expired token returns gone
-- [ ] 3.11 Test: Revoked token returns not found
-- [ ] 3.12 Test: Each successful public view atomically increments the view count
-- [ ] 3.13 Test: The owner sees the current view count via the note's response
-- [ ] 3.14 Test: An unsuccessful view attempt does not increment the view count
+- [x] 3.1 Test: Successful link generation for a note with no existing link
+- [x] 3.2 Test: Generating a link for a note not owned by the caller returns not found
+- [x] 3.3 Test: expiresInDays out of bounds rejected
+- [x] 3.4 Test: Generating a new link replaces the existing one
+- [x] 3.5 Test: Owner revokes their active share link
+- [x] 3.6 Test: Revoking when no active link exists returns not found
+- [x] 3.7 Test: Revoking a link for a note not owned by the caller returns not found
+- [x] 3.8 Test: Valid link returns the note read-only without authentication
+- [x] 3.9 Test: Unknown token returns not found
+- [x] 3.10 Test: Expired token returns gone
+- [x] 3.11 Test: Revoked token returns not found
+- [x] 3.12 Test: Each successful public view atomically increments the view count
+- [x] 3.13 Test: The owner sees the current view count via the note's response
+- [x] 3.14 Test: An unsuccessful view attempt does not increment the view count
 
 **Modified capability `notes`** (`backend/tests/notes.test.ts`) — 14 of the 18 scenarios below
 already exist from AB-1004/1005/1006 and are behaviorally unchanged by this ticket; confirm they
 still pass rather than rewriting them:
 
-- [ ] 3.15 Confirm existing: List returns only the caller's own non-deleted notes still passes
-- [ ] 3.16 Confirm existing: Custom page size is honored up to the maximum still passes
-- [ ] 3.17 Confirm existing: Page size above the maximum is capped still passes
-- [ ] 3.18 Confirm existing: Sorting by title ascending still passes
-- [ ] 3.19 Confirm existing: Unrecognized sortBy value rejected still passes
-- [ ] 3.20 Confirm existing: Page beyond the last page returns an empty list still passes
-- [ ] 3.21 Confirm existing: Reading a note not owned by the caller returns not found still
+- [x] 3.15 Confirm existing: List returns only the caller's own non-deleted notes still passes
+- [x] 3.16 Confirm existing: Custom page size is honored up to the maximum still passes
+- [x] 3.17 Confirm existing: Page size above the maximum is capped still passes
+- [x] 3.18 Confirm existing: Sorting by title ascending still passes
+- [x] 3.19 Confirm existing: Unrecognized sortBy value rejected still passes
+- [x] 3.20 Confirm existing: Page beyond the last page returns an empty list still passes
+- [x] 3.21 Confirm existing: Reading a note not owned by the caller returns not found still
       passes
-- [ ] 3.22 Confirm existing: Reading a soft-deleted note returns not found still passes
-- [ ] 3.23 Confirm existing: Filtering by tag returns only notes having all specified tags still
+- [x] 3.22 Confirm existing: Reading a soft-deleted note returns not found still passes
+- [x] 3.23 Confirm existing: Filtering by tag returns only notes having all specified tags still
       passes
-- [ ] 3.24 Confirm existing: Filtering by a tag id not owned by the caller returns an empty list
+- [x] 3.24 Confirm existing: Filtering by a tag id not owned by the caller returns an empty list
       still passes
-- [ ] 3.25 Confirm existing: A listed note includes its attached tags still passes
-- [ ] 3.26 Test: A note without an active share link has a null shareLink
-- [ ] 3.27 Test: A note with an active share link includes it
-- [ ] 3.28 Confirm existing: Delete sets deletedAt instead of removing the row still passes
-- [ ] 3.29 Confirm existing: Soft-deleted notes disappear from list and detail endpoints still
+- [x] 3.25 Confirm existing: A listed note includes its attached tags still passes
+- [x] 3.26 Test: A note without an active share link has a null shareLink
+- [x] 3.27 Test: A note with an active share link includes it
+- [x] 3.28 Confirm existing: Delete sets deletedAt instead of removing the row still passes
+- [x] 3.29 Confirm existing: Soft-deleted notes disappear from list and detail endpoints still
       passes
-- [ ] 3.30 Confirm existing: Deleting a note not owned by the caller returns not found still
+- [x] 3.30 Confirm existing: Deleting a note not owned by the caller returns not found still
       passes
-- [ ] 3.31 Test: Deleting a note revokes its active share link
+- [x] 3.31 Test: Deleting a note revokes its active share link
 
-- [ ] 3.32 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`,
-      `pnpm test --coverage` → all green, ≥80% coverage on new code
+- [x] 3.32 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0` clean,
+      `pnpm --filter backend exec vitest run --coverage` → 90/90 green. Coverage: 92.37%
+      stmts/92.32% lines overall; `NoteService.ts` 100%, `ShareService.ts` 100% (confirmed via
+      raw coverage-final.json — the text-summary table's printed rows omitted this file, same
+      v8-reporter display quirk noted in AB-1007), `routes/share.ts` 91.66% — well above the
+      80% bar
 
 ## 4. Archive
 
