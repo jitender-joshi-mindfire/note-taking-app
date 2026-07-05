@@ -49,8 +49,10 @@ Steps:
    `git commit`, `git push`, and `gh pr create --title "..." --body "..."` without asking for
    `[y/n]` confirmation first. Report back the commit SHA and PR URL once done. (This is a
    project-specific override — do not assume it applies to other repos.)
-10. Update this ticket's `Status` to `Done` in `docs/TICKETS.md` and include that update in the
-    same commit.
+10. Update this ticket's `Status` to `PR open (#N)` (the PR number from step 9) in
+    `docs/TICKETS.md` and include that update in the same commit. Do NOT set `Done` here —
+    that's reserved for after the PR is actually merged (update it manually, or via a follow-up
+    commit, once merge happens).
 
 PR description MUST list every FRS requirement covered and every spec scenario tested (no
 exceptions — this is required, not optional, for review).

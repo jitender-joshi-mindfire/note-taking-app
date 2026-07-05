@@ -58,16 +58,23 @@ export async function register(email: string, password: string): Promise<AuthRes
   return { user: toAuthUser(user), accessToken, refreshToken };
 }
 
+// A precomputed bcrypt hash (same cost factor as real password hashes) with no
+// corresponding real password. Used to keep login's timing constant regardless of
+// whether the email exists — see comment in login() below.
+const DUMMY_PASSWORD_HASH = "$2b$12$0q5ckLy7X6MEP.AsAfSFE..JN9xJcxNtG1/kxb83UMqLwvZOUHYxa";
+
 export async function login(email: string, password: string): Promise<AuthResult> {
   const normalizedEmail = email.toLowerCase();
 
   const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
-  if (!user) {
-    throw new InvalidCredentialsError();
-  }
 
-  const valid = await comparePassword(password, user.passwordHash);
-  if (!valid) {
+  // Always run a bcrypt comparison, even when the user doesn't exist, comparing
+  // against a fixed dummy hash if necessary. Without this, "no such account"
+  // returns near-instantly while "wrong password" always pays bcrypt's cost, and
+  // that timing gap lets an attacker enumerate valid emails despite the identical
+  // response body/status (undermining FRS 3.2.2's anti-enumeration intent).
+  const valid = await comparePassword(password, user?.passwordHash ?? DUMMY_PASSWORD_HASH);
+  if (!user || !valid) {
     throw new InvalidCredentialsError();
   }
 
@@ -106,21 +113,20 @@ export async function refresh(refreshToken: string): Promise<AuthTokens> {
   const newRawToken = generateRefreshToken();
 
   // Atomically claim this token (WHERE requires revokedAt to still be null, so
-  // concurrent requests can't both win) and issue its replacement in the same
-  // interactive transaction — matching design.md's "both in one prisma.$transaction"
-  // decision, so a crash between the two statements can't revoke the old token
-  // without ever issuing a replacement.
-  const rotated = await prisma.$transaction(async (tx) => {
+  // concurrent requests can't both win), then issue its replacement and link the
+  // two via rotatedToId — all in one interactive transaction, so a crash partway
+  // through can't revoke the old token without ever issuing a replacement.
+  const newToken = await prisma.$transaction(async (tx) => {
     const claim = await tx.refreshToken.updateMany({
       where: { id: tokenRow.id, revokedAt: null },
       data: { revokedAt: new Date() },
     });
 
     if (claim.count === 0) {
-      return false;
+      return null;
     }
 
-    await tx.refreshToken.create({
+    const created = await tx.refreshToken.create({
       data: {
         userId: tokenRow.userId,
         tokenHash: hashToken(newRawToken),
@@ -128,16 +134,28 @@ export async function refresh(refreshToken: string): Promise<AuthTokens> {
       },
     });
 
-    return true;
+    await tx.refreshToken.update({
+      where: { id: tokenRow.id },
+      data: { rotatedToId: created.id },
+    });
+
+    return created;
   });
 
-  if (!rotated) {
-    // Someone else already claimed/revoked this token first (or it was already
-    // revoked, e.g. via logout) — reuse detected, treat as compromise.
-    await prisma.refreshToken.updateMany({
-      where: { userId: tokenRow.userId, revokedAt: null },
-      data: { revokedAt: new Date() },
-    });
+  if (!newToken) {
+    // Lost the claim — this token was already revoked. Only treat it as a
+    // compromise signal (mass-revoke every session) if it was revoked via
+    // ROTATION (rotatedToId set) — that means someone is replaying a stale,
+    // already-superseded token. If it was revoked via logout (rotatedToId still
+    // null), it's simply dead; reject normally without side effects, so a
+    // retried logout call can't silently sign the user out of every device.
+    const currentState = await prisma.refreshToken.findUnique({ where: { id: tokenRow.id } });
+    if (currentState?.rotatedToId) {
+      await prisma.refreshToken.updateMany({
+        where: { userId: tokenRow.userId, revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
+    }
     throw new InvalidRefreshTokenError();
   }
 

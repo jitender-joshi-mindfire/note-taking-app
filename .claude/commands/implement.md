@@ -27,7 +27,9 @@ Rules:
 - Verify every library/API call against live docs via Context7 MCP before using it — no
   hallucinated methods.
 - When every phase is complete and all checkpoints are green, run
-  `openspec archive <change-name>` and update `docs/TICKETS.md`'s status for this ticket.
+  `openspec archive <change-name>` and update `docs/TICKETS.md`'s status for this ticket to
+  `In progress` still (do NOT mark `Done` here — archiving happens before the PR exists;
+  `/pr` sets `PR open (#N)`, and `Done` is reserved for after the PR actually merges).
 
 Output when done:
 

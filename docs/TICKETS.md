@@ -12,7 +12,7 @@ change; `—` means not started yet).
 | Ticket | Scope | FRS Sections | Domain | Status | Issue | OpenSpec Change |
 |---|---|---|---|---|---|---|
 | AB-1001 | Project setup — monorepo, Prisma, CLAUDE.md files, agents, skills, MCPs | — (infra) | infra | Done | [#1](https://github.com/jitender-joshi-mindfire/note-taking-app/issues/1) | — (predates OpenSpec usage) |
-| AB-1002 | Auth — register, login, logout, JWT + refresh token | 3.1, 3.2, 3.3, 3.5 | backend | Done | [#3](https://github.com/jitender-joshi-mindfire/note-taking-app/issues/3) | `ab-1002-user-auth` (archived: `openspec/changes/archive/2026-07-04-ab-1002-user-auth/`) |
+| AB-1002 | Auth — register, login, logout, JWT + refresh token | 3.1, 3.2, 3.3, 3.5 | backend | PR open ([#18](https://github.com/jitender-joshi-mindfire/note-taking-app/pull/18)) | [#3](https://github.com/jitender-joshi-mindfire/note-taking-app/issues/3) | `ab-1002-user-auth` (archived: `openspec/changes/archive/2026-07-04-ab-1002-user-auth/`) |
 | AB-1003 | Auth — forgot password + OTP reset | 3.4 | backend | Not started | [#4](https://github.com/jitender-joshi-mindfire/note-taking-app/issues/4) | — |
 | AB-1004 | Notes — full CRUD + soft delete | 4.1, 4.2, 4.3, 4.4 | backend | Not started | [#5](https://github.com/jitender-joshi-mindfire/note-taking-app/issues/5) | — |
 | AB-1005 | Notes — pagination, sorting, tag filtering | 4.5, 4.6 | backend | Not started | [#6](https://github.com/jitender-joshi-mindfire/note-taking-app/issues/6) | — |
@@ -38,4 +38,7 @@ email sending.
 
 - "AB" is not an acronym — it's an arbitrary ticket-prefix carried over verbatim from the
   original assignment brief. It has no meaning beyond being this project's ticket ID format.
-- Update the `Status` column as tickets complete (`Not started` → `In progress` → `Done`).
+- Update the `Status` column as tickets complete: `Not started` → `In progress` →
+  `PR open (#N)` (implementation + archive done, awaiting review/merge) → `Done` (merged).
+  `Done` means merged, not just implemented — `openspec archive` happening before the PR is
+  raised (by design, per `/implement`) does not mean the ticket itself is done yet.

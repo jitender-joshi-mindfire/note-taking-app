@@ -211,6 +211,37 @@ describe("POST /api/auth/refresh", () => {
 
     expect(res.status).toBe(401);
   });
+
+  it("Reusing a logout-revoked token does not revoke other sessions", async () => {
+    const registerRes = await request(app)
+      .post("/api/auth/register")
+      .send({ email: "nina@example.com", password: "password123" });
+    const { accessToken, refreshToken: sessionAToken } = registerRes.body;
+
+    // A second, independent session for the same user (e.g. a different device).
+    const loginRes = await request(app)
+      .post("/api/auth/login")
+      .send({ email: "nina@example.com", password: "password123" });
+    const sessionBToken = loginRes.body.refreshToken;
+
+    // Log out session A normally.
+    await request(app)
+      .post("/api/auth/logout")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ refreshToken: sessionAToken });
+
+    // Replay session A's now-dead token (e.g. a client retrying a logout call).
+    const replayRes = await request(app)
+      .post("/api/auth/refresh")
+      .send({ refreshToken: sessionAToken });
+    expect(replayRes.status).toBe(401);
+
+    // Session B must be unaffected — logout-revoked-token replay must not mass-revoke.
+    const sessionBRes = await request(app)
+      .post("/api/auth/refresh")
+      .send({ refreshToken: sessionBToken });
+    expect(sessionBRes.status).toBe(200);
+  });
 });
 
 describe("Rate limiting", () => {
