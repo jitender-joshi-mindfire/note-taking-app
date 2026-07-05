@@ -43,10 +43,14 @@ export const forgotPasswordSchema = z.object({
   email: z.string().email(),
 });
 
+// newPassword is intentionally NOT `passwordSchema` here — complexity is checked
+// in AuthService.confirmPasswordReset, AFTER the OTP is validated, so a bad OTP
+// short-circuits before a weak password does (see design.md Decision 3). Only a
+// basic non-empty check happens at the request-shape level.
 export const resetPasswordSchema = z.object({
   email: z.string().email(),
   otp: z.string().length(6),
-  newPassword: passwordSchema,
+  newPassword: z.string().min(1),
 });
 
 export type RegisterInput = z.infer<typeof registerSchema>;

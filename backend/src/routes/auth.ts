@@ -26,6 +26,7 @@ import {
   refresh,
   register,
   requestPasswordReset,
+  WeakPasswordError,
 } from "../services/AuthService.js";
 
 export const authRouter: RouterType = Router();
@@ -155,6 +156,16 @@ authRouter.post("/reset-password", resetPasswordLimiter, async (req, res) => {
     }
     if (err instanceof InvalidOtpError) {
       res.status(401).json({ error: { code: "INVALID_OTP", message: "Invalid or used OTP" } });
+      return;
+    }
+    if (err instanceof WeakPasswordError) {
+      res.status(400).json({
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "Invalid new password",
+          fields: err.fields,
+        },
+      });
       return;
     }
     throw err;

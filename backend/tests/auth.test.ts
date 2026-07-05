@@ -305,12 +305,21 @@ describe("POST /api/auth/forgot-password", () => {
       .post("/api/auth/register")
       .send({ email: "pete@example.com", password: "password123" });
 
+    // The response-time floor (design.md Decision 2) is a fixed value applied to
+    // both branches — verify it's actually active on each, not just that response
+    // shape matches. This doesn't assert the two are indistinguishable (a flaky
+    // thing to assert in CI), only that the floor-padding logic ran on both paths.
+    const existingStart = Date.now();
     const existingRes = await request(app)
       .post("/api/auth/forgot-password")
       .send({ email: "pete@example.com" });
+    const existingElapsed = Date.now() - existingStart;
+
+    const missingStart = Date.now();
     const missingRes = await request(app)
       .post("/api/auth/forgot-password")
       .send({ email: "nobody-forgot@example.com" });
+    const missingElapsed = Date.now() - missingStart;
 
     expect(existingRes.status).toBe(200);
     expect(missingRes.status).toBe(200);
@@ -318,6 +327,11 @@ describe("POST /api/auth/forgot-password", () => {
 
     const otpForMissing = await requestOtpAndCapture("nobody-forgot@example.com");
     expect(otpForMissing).toBeNull();
+
+    const FLOOR_MS = 200;
+    const TOLERANCE_MS = 30; // timer/event-loop scheduling granularity
+    expect(existingElapsed).toBeGreaterThanOrEqual(FLOOR_MS - TOLERANCE_MS);
+    expect(missingElapsed).toBeGreaterThanOrEqual(FLOOR_MS - TOLERANCE_MS);
   });
 
   it("New OTP request invalidates the previous one", async () => {
@@ -342,9 +356,11 @@ describe("POST /api/auth/forgot-password", () => {
 
 describe("POST /api/auth/reset-password", () => {
   it("Successful password reset", async () => {
-    await request(app)
+    const registerRes = await request(app)
       .post("/api/auth/register")
       .send({ email: "rosa@example.com", password: "password123" });
+    const preResetRefreshToken = registerRes.body.refreshToken;
+
     const otp = await requestOtpAndCapture("rosa@example.com");
 
     const resetRes = await request(app)
@@ -363,6 +379,13 @@ describe("POST /api/auth/reset-password", () => {
       .post("/api/auth/login")
       .send({ email: "rosa@example.com", password: "brandnewpass456" });
     expect(newPasswordLogin.status).toBe(200);
+
+    // FRS 3.4.5: successful reset must revoke every refresh token the user had
+    // before the reset, not just prevent login with the old password.
+    const refreshWithPreResetToken = await request(app)
+      .post("/api/auth/refresh")
+      .send({ refreshToken: preResetRefreshToken });
+    expect(refreshWithPreResetToken.status).toBe(401);
   });
 
   it("Expired OTP rejected", async () => {

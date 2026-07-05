@@ -1,5 +1,7 @@
 import type { AuthTokens, AuthUser } from "@note-taking-app/shared";
+import { passwordSchema } from "@note-taking-app/shared";
 import { Prisma } from "@prisma/client";
+import { timingSafeEqual } from "node:crypto";
 import { prisma } from "../lib/prisma.js";
 import { comparePassword, generateRefreshToken, hashPassword, hashToken } from "../lib/hash.js";
 import { signAccessToken } from "../lib/jwt.js";
@@ -7,16 +9,41 @@ import { generateOtp } from "../lib/otp.js";
 
 const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const OTP_TTL_MS = 10 * 60 * 1000;
-const FORGOT_PASSWORD_MIN_RESPONSE_MS = 50;
+// Best-effort mitigation, not a guarantee: this pads the response up to a fixed
+// floor, so it only equalizes timing when the found-path's real work (a DB
+// transaction) completes faster than the floor. Set generously above expected
+// single-transaction latency even against a remote/managed Postgres instance. If
+// DB latency ever exceeds this floor, the found path becomes slower than the
+// padded not-found path — a residual, accepted risk, not a claim of perfect
+// constant-time behavior (design.md previously overstated this).
+const FORGOT_PASSWORD_MIN_RESPONSE_MS = 200;
+const DUMMY_USER_ID = "00000000-0000-0000-0000-000000000000";
+const DUMMY_OTP_HASH = hashToken("000000");
 
 export class DuplicateEmailError extends Error {}
 export class InvalidCredentialsError extends Error {}
 export class InvalidRefreshTokenError extends Error {}
 export class InvalidOtpError extends Error {}
 export class ExpiredOtpError extends Error {}
+export class WeakPasswordError extends Error {
+  constructor(public fields: { field: string; message: string }[]) {
+    super("Weak password");
+  }
+}
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Constant-time comparison of two equal-length hex-encoded hashes, so a wrong OTP
+// can't be distinguished from a right one by comparison timing.
+function safeCompareHashes(a: string, b: string): boolean {
+  const bufA = Buffer.from(a, "hex");
+  const bufB = Buffer.from(b, "hex");
+  if (bufA.length !== bufB.length) {
+    return false;
+  }
+  return timingSafeEqual(bufA, bufB);
 }
 
 interface AuthResult {
@@ -214,21 +241,40 @@ export async function confirmPasswordReset(
   const normalizedEmail = email.toLowerCase();
 
   const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
-  if (!user) {
-    throw new InvalidOtpError();
-  }
 
+  // Always perform an equivalent-cost OTP lookup and hash comparison, even when no
+  // user exists (using a dummy, never-matching userId) — otherwise a nonexistent-
+  // email request returns after one query while a real-email-wrong-OTP request
+  // does an extra query + hash, making the two distinguishable by timing and
+  // enabling account enumeration via this endpoint (found during AB-1003 review,
+  // same class of issue AB-1002's login timing fix addressed).
   const otpRow = await prisma.passwordResetOtp.findFirst({
-    where: { userId: user.id },
+    where: { userId: user?.id ?? DUMMY_USER_ID },
     orderBy: { createdAt: "desc" },
   });
 
-  if (!otpRow || otpRow.usedAt || otpRow.otpHash !== hashToken(otp)) {
+  const providedOtpHash = hashToken(otp);
+  const otpMatches = safeCompareHashes(otpRow?.otpHash ?? DUMMY_OTP_HASH, providedOtpHash);
+
+  if (!user || !otpRow || otpRow.usedAt || !otpMatches) {
     throw new InvalidOtpError();
   }
 
   if (otpRow.expiresAt < new Date()) {
     throw new ExpiredOtpError();
+  }
+
+  // Password complexity is checked here, AFTER the OTP is validated (design.md
+  // Decision 3) — not in the route's Zod schema, which would run before this
+  // function and let a weak-password error mask an invalid/expired OTP.
+  const passwordCheck = passwordSchema.safeParse(newPassword);
+  if (!passwordCheck.success) {
+    throw new WeakPasswordError(
+      passwordCheck.error.issues.map((issue) => ({
+        field: "newPassword",
+        message: issue.message,
+      })),
+    );
   }
 
   const passwordHash = await hashPassword(newPassword);

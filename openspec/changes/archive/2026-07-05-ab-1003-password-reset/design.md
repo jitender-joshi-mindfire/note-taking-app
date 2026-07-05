@@ -33,8 +33,17 @@ simpler and sufficient.
 like passwords. AB-1002's fix (compare against a dummy bcrypt hash to equalize cost) doesn't
 apply here since there's no slow hash in the loop to equalize. Instead, `requestPasswordReset`
 measures elapsed time and, before returning, sleeps any remaining time up to a fixed floor
-(e.g. 50ms) — applied on both the found and not-found paths identically, so total handler
-duration is constant regardless of branch taken.
+(200ms) — applied on both the found and not-found paths identically.
+**Correction (found during `/review`):** this is a best-effort mitigation, not a guarantee of
+constant-time behavior — an earlier draft of this document overstated it as such. A floor only
+equalizes timing when the found-path's real work (a DB transaction: delete + create) completes
+*faster* than the floor; if real DB latency ever exceeds it, the found path becomes slower than
+the padded not-found path, and the two remain distinguishable, just in the other direction. The
+floor (200ms) is set generously above expected single-transaction latency even against a
+remote/managed Postgres instance to make this practically unlikely, but it is a residual,
+accepted risk, not a closed gap. A true fix would require a fixed *target* duration high enough
+to always exceed worst-case latency on both paths, at the cost of added latency on every request;
+200ms was chosen as a pragmatic middle ground for a low-frequency, non-performance-critical flow.
 **Alternative considered:** Perform a dummy `PasswordResetOtp` delete+create on the not-found
 path to match the found path's DB cost. Rejected — `PasswordResetOtp.userId` has a foreign key
 to `User.id`; there is no valid dummy user id to write against without violating referential
@@ -48,6 +57,23 @@ at all (bad OTP) should short-circuit before spending effort validating what the
 layer regardless of OTP state — this still happens (Zod schema validation is always first,
 catching malformed requests), but the *business-rule* complexity check inside the service after
 DB-verifying the OTP is what's being sequenced here.
+**Correction (found during `/review`):** the first implementation got this backwards —
+`resetPasswordSchema` used the full `passwordSchema` (with complexity rules) at the route/Zod
+layer, which runs *before* `confirmPasswordReset` is ever called, so a request with both a bad
+OTP and a weak password returned 400 (weak password) instead of the intended 401/410 (bad OTP) —
+the opposite of this decision's stated intent. Fixed: `resetPasswordSchema.newPassword` is now
+just `z.string().min(1)` (shape only), and the real complexity check
+(`passwordSchema.safeParse`) runs inside `confirmPasswordReset` after the OTP checks pass.
+
+### 3a. Equivalent-cost OTP lookup to close a second timing side-channel
+**Decision:** `confirmPasswordReset`'s nonexistent-user path now performs the same
+`passwordResetOtp.findFirst` query (against a dummy, non-existent `userId`) and the same hash
+comparison as the real-user path, before branching on the combined result. **Correction (found
+during `/review`):** the first implementation short-circuited immediately after `findUnique`
+when no user existed, skipping the OTP lookup and hash comparison that the real-user path always
+performs — a timing gap that could be used to enumerate accounts via this endpoint, the same
+class of issue AB-1002's login review caught. The OTP hash comparison also now uses
+`crypto.timingSafeEqual` instead of `!==`, since the prior string comparison wasn't constant-time.
 
 ### 4. Separate rate limiters per endpoint, matching AB-1002's pattern
 **Decision:** Two new `rateLimit()` instances — `forgotPasswordLimiter`, `resetPasswordLimiter`
