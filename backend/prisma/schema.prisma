@@ -59,6 +59,7 @@ model Note {
   deletedAt DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+  searchVector Unsupported("tsvector")?
 
   versions  NoteVersion[]
   tags      Tag[]         @relation("NoteTags")

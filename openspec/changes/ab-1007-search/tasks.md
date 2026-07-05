@@ -1,27 +1,31 @@
 ## 1. Foundation
 
-- [ ] 1.1 Add `packages/shared/src/search.ts`: `searchQuerySchema`, `SearchQuery`,
+- [x] 1.1 Add `packages/shared/src/search.ts`: `searchQuerySchema`, `SearchQuery`,
       `SearchResultItem`, `SearchResponse` (design.md Shared Schemas); export from
       `packages/shared/src/index.ts`
-- [ ] 1.2 Update `backend/prisma/schema.prisma`: add `searchVector Unsupported("tsvector")?` to
+- [x] 1.2 Update `backend/prisma/schema.prisma`: add `searchVector Unsupported("tsvector")?` to
       `Note`
-- [ ] 1.3 Generate the migration: `npx prisma migrate dev --schema backend/prisma/schema.prisma
-      --name add_note_search_vector --create-only`; verify whether Prisma auto-generates the
-      `ALTER TABLE ... ADD COLUMN "searchVector" tsvector` DDL for the `Unsupported` field
-      (design.md's flagged Context7-unverified risk — hand-add it if Prisma doesn't); hand-edit
-      the migration to append the trigger function + trigger (Decision 1: `BEFORE INSERT OR
-      UPDATE OF title, content`, NOT `AFTER`), a `CREATE INDEX ... USING GIN ("searchVector")`,
-      and a one-time backfill `UPDATE "Note" SET "searchVector" = ...` using the same expression
-      as the trigger function
-- [ ] 1.4 Apply the migration to both the dev and test databases (same two-step process as
-      AB-1006); run `pnpm --filter backend prisma:generate`
-- [ ] 1.5 Add ADR `docs/decisions/0002-tsvector-trigger-before-not-after.md` documenting
+- [x] 1.3 Generate the migration: `npx prisma migrate dev --schema backend/prisma/schema.prisma
+      --name add_note_search_vector --create-only`; Prisma DID auto-generate the
+      `ALTER TABLE ... ADD COLUMN "searchVector" tsvector` DDL (design.md's flagged risk
+      resolved — confirmed by inspection); hand-edited the migration to append the trigger
+      function + trigger (Decision 1: `BEFORE INSERT OR UPDATE OF title, content`, NOT `AFTER`),
+      `CREATE INDEX ... USING GIN ("searchVector")`, and a one-time backfill
+      `UPDATE "Note" SET "searchVector" = ...`
+- [x] 1.4 Applied the migration to both the dev and test databases; ran
+      `pnpm --filter backend prisma:generate`. Verified directly against Postgres: column,
+      GIN index, and `BEFORE` trigger all present; all pre-existing rows backfilled with a
+      non-null `searchVector`
+- [x] 1.5 Add ADR `docs/decisions/0002-tsvector-trigger-before-not-after.md` documenting
       Decision 1 (context, decision, consequences)
-- [ ] 1.6 Update `docs/SDS.md`: Section 3 (correct trigger timing from `AFTER INSERT OR UPDATE`
-      to `BEFORE INSERT OR UPDATE OF title, content`, with rationale); Section 12 (mark the
-      "tsvector-trigger migration approach" open decision resolved, pointing to the new ADR)
-- [ ] 1.7 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test` → all
-      green
+- [x] 1.6 Update `docs/SDS.md`: Section 3 and Section 6 corrected trigger timing from
+      `AFTER INSERT OR UPDATE` to `BEFORE INSERT OR UPDATE OF title, content`, with rationale;
+      Section 12 marked the "tsvector-trigger migration approach" open decision resolved,
+      pointing to the new ADR. Section 5's `GET /search` contract already matched the
+      implementation — no change needed there.
+- [x] 1.7 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0` clean,
+      `pnpm --filter backend test` → 63/63 green (no sequencing gap this time — `search.ts`
+      isn't consumed anywhere until Phase 2)
 
 ## 2. Core Implementation
 
