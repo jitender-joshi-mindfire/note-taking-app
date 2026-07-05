@@ -1,6 +1,7 @@
 import cors from "cors";
 import express from "express";
 import { authRouter } from "./routes/auth.js";
+import { notesRouter } from "./routes/notes.js";
 
 export const app: express.Express = express();
 
@@ -12,6 +13,7 @@ app.get("/health", (_req, res) => {
 });
 
 app.use("/api/auth", authRouter);
+app.use("/api/notes", notesRouter);
 
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error(err);

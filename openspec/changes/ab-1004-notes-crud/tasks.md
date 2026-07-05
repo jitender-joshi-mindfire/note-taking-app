@@ -17,21 +17,25 @@
 
 No `[PARALLEL]` tasks — AB-1004 is backend-only (no frontend component; that's AB-1011/1012).
 
-- [ ] 2.1 Add `NoteNotFoundError` and `createNote`, `listNotes`, `getNote` to
+- [x] 2.1 Add `NoteNotFoundError` and `createNote`, `listNotes`, `getNote` to
       `backend/src/services/NoteService.ts` — each scoped via
       `where: { id, userId, deletedAt: null }` (design.md Decision 2); `createNote` inserts the
       note and its first `NoteVersion` in one transaction
-- [ ] 2.2 Add `updateNote` to `NoteService.ts`: read current note (ownership-scoped), then in one
+- [x] 2.2 Add `updateNote` to `NoteService.ts`: read current note (ownership-scoped), then in one
       `$transaction` create a `NoteVersion` of the prior state and apply only the provided
       fields (design.md Decision 3)
-- [ ] 2.3 Add `deleteNote` to `NoteService.ts`: atomic `updateMany` with
+- [x] 2.3 Add `deleteNote` to `NoteService.ts`: atomic `updateMany` with
       `where: { id, userId, deletedAt: null }` setting `deletedAt`; if `count === 0`, throw
       `NoteNotFoundError`
-- [ ] 2.4 Add `backend/src/routes/notes.ts`: wire `POST /`, `GET /`, `GET /:id`, `PATCH /:id`,
+- [x] 2.4 Add `backend/src/routes/notes.ts`: wire `POST /`, `GET /`, `GET /:id`, `PATCH /:id`,
       `DELETE /:id`, all behind `requireAuth`; `GET /` returns the fixed-default paginated
       envelope (page 1, pageSize 20)
-- [ ] 2.5 Mount the notes router at `/api/notes` in `backend/src/app.ts`
-- [ ] 2.6 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test` → all green
+- [x] 2.5 Mount the notes router at `/api/notes` in `backend/src/app.ts`
+- [x] 2.6 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test` → all
+      green. Also manually smoke-tested all 5 endpoints against a real Postgres instance
+      (unauthenticated rejection, create/list/get/update/delete, empty-title and empty-PATCH
+      validation, cross-user 404s, soft-delete row survival, and version-snapshot creation on
+      both create and update, verified directly against the database) — all behaved correctly.
 
 ## 3. Tests (one per spec scenario)
 
