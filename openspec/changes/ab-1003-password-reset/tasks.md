@@ -37,17 +37,18 @@ No `[PARALLEL]` tasks — AB-1003 is backend-only (no frontend component; that's
 
 ## 3. Tests (one per spec scenario)
 
-- [ ] 3.1 Test: Request reset for an existing account
-- [ ] 3.2 Test: Request reset for a non-existent account returns an identical response
-- [ ] 3.3 Test: New OTP request invalidates the previous one
-- [ ] 3.4 Test: Successful password reset
-- [ ] 3.5 Test: Expired OTP rejected
-- [ ] 3.6 Test: Wrong or already-used OTP rejected
-- [ ] 3.7 Test: Weak new password rejected
-- [ ] 3.8 Test: Excessive forgot-password requests rejected
-- [ ] 3.9 Test: Excessive reset-password attempts rejected
-- [ ] 3.10 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`,
-      `pnpm test --coverage` → all green, ≥80% coverage on new code
+- [x] 3.1 Test: Request reset for an existing account
+- [x] 3.2 Test: Request reset for a non-existent account returns an identical response
+- [x] 3.3 Test: New OTP request invalidates the previous one
+- [x] 3.4 Test: Successful password reset
+- [x] 3.5 Test: Expired OTP rejected
+- [x] 3.6 Test: Wrong or already-used OTP rejected
+- [x] 3.7 Test: Weak new password rejected
+- [x] 3.8 Test: Excessive forgot-password requests rejected
+- [x] 3.9 Test: Excessive reset-password attempts rejected
+- [x] 3.10 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`,
+      `pnpm test --coverage` → all green, ≥80% coverage on new code (achieved 89.58%
+      statements/lines, 93.1% functions)
 
 ## 4. Archive
 

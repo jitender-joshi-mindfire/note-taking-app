@@ -1,8 +1,13 @@
 import request from "supertest";
-import { afterAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { app } from "../src/app.js";
 import { prisma } from "../src/lib/prisma.js";
-import { loginLimiter, registerLimiter } from "../src/middleware/rateLimit.js";
+import {
+  forgotPasswordLimiter,
+  loginLimiter,
+  registerLimiter,
+  resetPasswordLimiter,
+} from "../src/middleware/rateLimit.js";
 
 const LOOPBACK_KEYS = ["127.0.0.1", "::1", "::ffff:127.0.0.1"];
 
@@ -10,6 +15,8 @@ function resetRateLimits() {
   for (const key of LOOPBACK_KEYS) {
     loginLimiter.resetKey(key);
     registerLimiter.resetKey(key);
+    forgotPasswordLimiter.resetKey(key);
+    resetPasswordLimiter.resetKey(key);
   }
 }
 
@@ -18,6 +25,18 @@ beforeEach(async () => {
   await prisma.user.deleteMany();
   resetRateLimits();
 });
+
+// The OTP is only ever exposed via console.log (never in the API response, per
+// FRS 3.4.2 — no real email is sent). Capture it the same way a developer would
+// in this dev-only flow.
+async function requestOtpAndCapture(email: string): Promise<string | null> {
+  const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+  await request(app).post("/api/auth/forgot-password").send({ email });
+  const otpCall = logSpy.mock.calls.find((call) => String(call[0]).includes("[OTP]"));
+  logSpy.mockRestore();
+  const match = otpCall ? /(\d{6})$/.exec(String(otpCall[0])) : null;
+  return match ? match[1] : null;
+}
 
 afterAll(async () => {
   await prisma.$disconnect();
@@ -263,6 +282,166 @@ describe("Rate limiting", () => {
       const res = await request(app)
         .post("/api/auth/register")
         .send({ email: `spam${i}@example.com`, password: "password123" });
+      lastStatus = res.status;
+    }
+
+    expect(lastStatus).toBe(429);
+  });
+});
+
+describe("POST /api/auth/forgot-password", () => {
+  it("Request reset for an existing account", async () => {
+    await request(app)
+      .post("/api/auth/register")
+      .send({ email: "olga@example.com", password: "password123" });
+
+    const otp = await requestOtpAndCapture("olga@example.com");
+
+    expect(otp).toMatch(/^\d{6}$/);
+  });
+
+  it("Request reset for a non-existent account returns an identical response", async () => {
+    await request(app)
+      .post("/api/auth/register")
+      .send({ email: "pete@example.com", password: "password123" });
+
+    const existingRes = await request(app)
+      .post("/api/auth/forgot-password")
+      .send({ email: "pete@example.com" });
+    const missingRes = await request(app)
+      .post("/api/auth/forgot-password")
+      .send({ email: "nobody-forgot@example.com" });
+
+    expect(existingRes.status).toBe(200);
+    expect(missingRes.status).toBe(200);
+    expect(existingRes.body).toEqual(missingRes.body);
+
+    const otpForMissing = await requestOtpAndCapture("nobody-forgot@example.com");
+    expect(otpForMissing).toBeNull();
+  });
+
+  it("New OTP request invalidates the previous one", async () => {
+    await request(app)
+      .post("/api/auth/register")
+      .send({ email: "quinn@example.com", password: "password123" });
+
+    const firstOtp = await requestOtpAndCapture("quinn@example.com");
+    const secondOtp = await requestOtpAndCapture("quinn@example.com");
+
+    const firstAttempt = await request(app)
+      .post("/api/auth/reset-password")
+      .send({ email: "quinn@example.com", otp: firstOtp, newPassword: "shouldfail123" });
+    expect(firstAttempt.status).toBe(401);
+
+    const secondAttempt = await request(app)
+      .post("/api/auth/reset-password")
+      .send({ email: "quinn@example.com", otp: secondOtp, newPassword: "shouldwork123" });
+    expect(secondAttempt.status).toBe(200);
+  });
+});
+
+describe("POST /api/auth/reset-password", () => {
+  it("Successful password reset", async () => {
+    await request(app)
+      .post("/api/auth/register")
+      .send({ email: "rosa@example.com", password: "password123" });
+    const otp = await requestOtpAndCapture("rosa@example.com");
+
+    const resetRes = await request(app)
+      .post("/api/auth/reset-password")
+      .send({ email: "rosa@example.com", otp, newPassword: "brandnewpass456" });
+    expect(resetRes.status).toBe(200);
+    expect(resetRes.body).not.toHaveProperty("accessToken");
+    expect(resetRes.body).not.toHaveProperty("refreshToken");
+
+    const oldPasswordLogin = await request(app)
+      .post("/api/auth/login")
+      .send({ email: "rosa@example.com", password: "password123" });
+    expect(oldPasswordLogin.status).toBe(401);
+
+    const newPasswordLogin = await request(app)
+      .post("/api/auth/login")
+      .send({ email: "rosa@example.com", password: "brandnewpass456" });
+    expect(newPasswordLogin.status).toBe(200);
+  });
+
+  it("Expired OTP rejected", async () => {
+    await request(app)
+      .post("/api/auth/register")
+      .send({ email: "sam@example.com", password: "password123" });
+    const otp = await requestOtpAndCapture("sam@example.com");
+
+    const user = await prisma.user.findUniqueOrThrow({ where: { email: "sam@example.com" } });
+    await prisma.passwordResetOtp.updateMany({
+      where: { userId: user.id },
+      data: { expiresAt: new Date(Date.now() - 1000) },
+    });
+
+    const res = await request(app)
+      .post("/api/auth/reset-password")
+      .send({ email: "sam@example.com", otp, newPassword: "newpassword123" });
+
+    expect(res.status).toBe(410);
+  });
+
+  it("Wrong or already-used OTP rejected", async () => {
+    await request(app)
+      .post("/api/auth/register")
+      .send({ email: "tara@example.com", password: "password123" });
+    const otp = await requestOtpAndCapture("tara@example.com");
+
+    const wrongOtpRes = await request(app)
+      .post("/api/auth/reset-password")
+      .send({ email: "tara@example.com", otp: "000000", newPassword: "newpassword123" });
+    expect(wrongOtpRes.status).toBe(401);
+
+    const usedOnceRes = await request(app)
+      .post("/api/auth/reset-password")
+      .send({ email: "tara@example.com", otp, newPassword: "newpassword123" });
+    expect(usedOnceRes.status).toBe(200);
+
+    const reusedRes = await request(app)
+      .post("/api/auth/reset-password")
+      .send({ email: "tara@example.com", otp, newPassword: "anotherpassword456" });
+    expect(reusedRes.status).toBe(401);
+  });
+
+  it("Weak new password rejected", async () => {
+    await request(app)
+      .post("/api/auth/register")
+      .send({ email: "uma@example.com", password: "password123" });
+    const otp = await requestOtpAndCapture("uma@example.com");
+
+    const res = await request(app)
+      .post("/api/auth/reset-password")
+      .send({ email: "uma@example.com", otp, newPassword: "abc" });
+
+    expect(res.status).toBe(400);
+    const messages = res.body.error.fields.map((f: { message: string }) => f.message);
+    expect(messages.some((m: string) => m.includes("8 characters"))).toBe(true);
+    expect(messages.some((m: string) => m.includes("number"))).toBe(true);
+  });
+});
+
+describe("Password reset rate limiting", () => {
+  it("Excessive forgot-password requests rejected", async () => {
+    let lastStatus = 0;
+    for (let i = 0; i < 6; i++) {
+      const res = await request(app)
+        .post("/api/auth/forgot-password")
+        .send({ email: "victor@example.com" });
+      lastStatus = res.status;
+    }
+
+    expect(lastStatus).toBe(429);
+  });
+
+  it("Excessive reset-password attempts rejected", async () => {
+    let lastStatus = 0;
+    for (let i = 0; i < 6; i++) {
+      const res = await request(app)
+        .post("/api/auth/reset-password")
+        .send({ email: "wendy@example.com", otp: "123456", newPassword: "password123" });
       lastStatus = res.status;
     }
 
