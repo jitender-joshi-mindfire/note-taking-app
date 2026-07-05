@@ -39,21 +39,26 @@ No `[PARALLEL]` tasks — AB-1004 is backend-only (no frontend component; that's
 
 ## 3. Tests (one per spec scenario)
 
-- [ ] 3.1 Test: Successful note creation
-- [ ] 3.2 Test: Empty title rejected
-- [ ] 3.3 Test: Creation produces the first version snapshot
-- [ ] 3.4 Test: List returns only the caller's own non-deleted notes
-- [ ] 3.5 Test: Reading a note not owned by the caller returns not found
-- [ ] 3.6 Test: Reading a soft-deleted note returns not found
-- [ ] 3.7 Test: Partial update applies only the provided fields
-- [ ] 3.8 Test: Update with no fields rejected
-- [ ] 3.9 Test: Update creates a version snapshot of the prior state
-- [ ] 3.10 Test: Updating a note not owned by the caller returns not found
-- [ ] 3.11 Test: Delete sets deletedAt instead of removing the row
-- [ ] 3.12 Test: Soft-deleted notes disappear from list and detail endpoints
-- [ ] 3.13 Test: Deleting a note not owned by the caller returns not found
-- [ ] 3.14 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`,
-      `pnpm test --coverage` → all green, ≥80% coverage on new code
+- [x] 3.1 Test: Successful note creation
+- [x] 3.2 Test: Empty title rejected
+- [x] 3.3 Test: Creation produces the first version snapshot
+- [x] 3.4 Test: List returns only the caller's own non-deleted notes
+- [x] 3.5 Test: Reading a note not owned by the caller returns not found
+- [x] 3.6 Test: Reading a soft-deleted note returns not found
+- [x] 3.7 Test: Partial update applies only the provided fields
+- [x] 3.8 Test: Update with no fields rejected
+- [x] 3.9 Test: Update creates a version snapshot of the prior state
+- [x] 3.10 Test: Updating a note not owned by the caller returns not found
+- [x] 3.11 Test: Delete sets deletedAt instead of removing the row
+- [x] 3.12 Test: Soft-deleted notes disappear from list and detail endpoints
+- [x] 3.13 Test: Deleting a note not owned by the caller returns not found
+- [x] 3.14 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`,
+      `pnpm test --coverage` → all green, ≥80% coverage on new code (achieved 89.78%
+      statements/lines, 95.55% functions). Also fixed a real cross-test-file interference
+      bug: notes.test.ts passed 13/13 alone but failed when run alongside auth.test.ts,
+      because both share one Postgres test database and Vitest ran the files in parallel,
+      letting one file's beforeEach cleanup race another file's in-flight test data. Fixed
+      by setting `fileParallelism: false` in vitest.config.ts.
 
 ## 4. Archive
 
