@@ -114,6 +114,6 @@ still pass rather than rewriting them:
 
 ## 4. Archive
 
-- [ ] 4.1 Run `openspec archive ab-1008-sharing`
-- [ ] 4.2 Update `docs/TICKETS.md` AB-1008 status to `In progress` (not `Done` — that's set by
+- [x] 4.1 Run `openspec archive ab-1008-sharing`
+- [x] 4.2 Update `docs/TICKETS.md` AB-1008 status to `In progress` (not `Done` — that's set by
       `/pr` as `PR open (#N)`, then manually after merge)

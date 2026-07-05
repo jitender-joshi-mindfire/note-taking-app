@@ -32,7 +32,8 @@ has ALL specified tags, AND semantics). An unrecognized `sortBy` value SHALL be 
 `tagIds` value that does not exist or is not owned by the caller SHALL simply match no notes,
 not produce an error. Requesting a page beyond the last page of results SHALL return an empty
 `items` array, not an error. Each returned note SHALL include its currently attached tags
-(`id`, `name`, `color`). Reading a note that is soft-deleted or not owned by the caller SHALL
+(`id`, `name`, `color`) and its active share link, if any (`shareLink: { token, url, expiresAt,
+viewCount } | null`). Reading a note that is soft-deleted or not owned by the caller SHALL
 return not-found, indistinguishable from the note never having existed.
 
 #### Scenario: List returns only the caller's own non-deleted notes
@@ -84,6 +85,15 @@ return not-found, indistinguishable from the note never having existed.
 - **THEN** that note's entry in `items` includes a `tags` array with each attached tag's id,
   name, and color
 
+#### Scenario: A note without an active share link has a null shareLink
+- **WHEN** an authenticated client requests a note that has no active share link
+- **THEN** the note's `shareLink` field is `null`
+
+#### Scenario: A note with an active share link includes it
+- **WHEN** an authenticated client requests a note that has an active share link
+- **THEN** the note's `shareLink` field includes that link's `token`, `url`, `expiresAt`, and
+  `viewCount`
+
 ### Requirement: Note Update
 The system SHALL allow an authenticated user to partially update their own note's `title`,
 `content`, and/or tag set. A request with none of `title`, `content`, or `tagIds` SHALL be
@@ -132,7 +142,9 @@ return not-found.
 ### Requirement: Note Soft Delete
 The system SHALL delete a note by setting a `deletedAt` timestamp only — the row itself SHALL
 NOT be physically removed. Soft-deleted notes SHALL no longer appear in list or detail
-endpoints for the owner. Deleting a note not owned by the caller SHALL return not-found.
+endpoints for the owner. Deleting a note SHALL also revoke that note's active share link, if any
+(soft-revoke, same as an explicit revocation). Deleting a note not owned by the caller SHALL
+return not-found.
 
 #### Scenario: Delete sets deletedAt instead of removing the row
 - **WHEN** an authenticated client deletes their own note
@@ -148,4 +160,8 @@ endpoints for the owner. Deleting a note not owned by the caller SHALL return no
 - **WHEN** an authenticated client attempts to delete a note that exists but belongs to a
   different user
 - **THEN** the system returns 404 and does not delete the note
+
+#### Scenario: Deleting a note revokes its active share link
+- **WHEN** an authenticated client deletes their own note that has an active share link
+- **THEN** the system revokes that share link, and it no longer grants public access
 
