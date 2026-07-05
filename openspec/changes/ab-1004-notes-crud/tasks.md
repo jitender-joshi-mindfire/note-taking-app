@@ -1,17 +1,17 @@
 ## 1. Foundation
 
-- [ ] 1.1 Add `Note`, `NoteVersion` models and `User.notes` relation to
+- [x] 1.1 Add `Note`, `NoteVersion` models and `User.notes` relation to
       `backend/prisma/schema.prisma` (scoped subset per design.md Decision 1 — no
       tags/shareLink/searchVector yet)
-- [ ] 1.2 Run `prisma migrate dev` to create and apply the migration, regenerate the Prisma
+- [x] 1.2 Run `prisma migrate dev` to create and apply the migration, regenerate the Prisma
       client; apply the same migration to the test database
-- [ ] 1.3 Add `packages/shared/src/notes.ts`: `createNoteSchema`, `updateNoteSchema` (with
+- [x] 1.3 Add `packages/shared/src/notes.ts`: `createNoteSchema`, `updateNoteSchema` (with
       `.refine` requiring at least one field), `NoteSummary`, `NoteListResponse` types; export
       from `packages/shared/src/index.ts`
-- [ ] 1.4 Extract `validationError` out of `backend/src/routes/auth.ts` into
+- [x] 1.4 Extract `validationError` out of `backend/src/routes/auth.ts` into
       `backend/src/lib/validation.ts` (design.md Decision 4), update `routes/auth.ts` to import
       it from there
-- [ ] 1.5 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test` → all green
+- [x] 1.5 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test` → all green
 
 ## 2. Core Implementation
 
