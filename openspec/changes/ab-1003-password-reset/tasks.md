@@ -1,12 +1,12 @@
 ## 1. Foundation
 
-- [ ] 1.1 Add `PasswordResetOtp` model and `User.resetOtps` relation to
+- [x] 1.1 Add `PasswordResetOtp` model and `User.resetOtps` relation to
       `backend/prisma/schema.prisma`
-- [ ] 1.2 Run `prisma migrate dev` to create and apply the migration, regenerate the Prisma
+- [x] 1.2 Run `prisma migrate dev` to create and apply the migration, regenerate the Prisma
       client; apply the same migration to the test database
-- [ ] 1.3 Export `passwordSchema` from `packages/shared/src/auth.ts` (currently private) and add
+- [x] 1.3 Export `passwordSchema` from `packages/shared/src/auth.ts` (currently private) and add
       `forgotPasswordSchema`, `resetPasswordSchema`
-- [ ] 1.4 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test` → all green
+- [x] 1.4 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test` → all green
 
 ## 2. Core Implementation
 
