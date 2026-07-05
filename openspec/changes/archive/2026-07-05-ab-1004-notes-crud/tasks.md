@@ -62,6 +62,6 @@ No `[PARALLEL]` tasks — AB-1004 is backend-only (no frontend component; that's
 
 ## 4. Archive
 
-- [ ] 4.1 Run `openspec archive ab-1004-notes-crud`
-- [ ] 4.2 Update `docs/TICKETS.md` AB-1004 status to `In progress` (not `Done` — that's set by
+- [x] 4.1 Run `openspec archive ab-1004-notes-crud`
+- [x] 4.2 Update `docs/TICKETS.md` AB-1004 status to `In progress` (not `Done` — that's set by
       `/pr` as `PR open (#N)`, then manually after merge)
