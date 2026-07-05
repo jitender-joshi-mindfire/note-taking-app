@@ -61,19 +61,22 @@ No `[PARALLEL]` tasks — AB-1007 is backend-only (no frontend component; that's
 
 New file `backend/tests/search.test.ts` (10 scenarios):
 
-- [ ] 3.1 Test: Successful search returns matching notes
-- [ ] 3.2 Test: Search excludes another user's notes
-- [ ] 3.3 Test: Search excludes soft-deleted notes
-- [ ] 3.4 Test: Missing or empty query rejected
-- [ ] 3.5 Test: Query with no matches returns an empty result
-- [ ] 3.6 Test: Matched keywords are highlighted in the snippet
-- [ ] 3.7 Test: Title is not highlighted
-- [ ] 3.8 Test: Results are ordered by relevance
-- [ ] 3.9 Test: Custom page size is honored up to the maximum
-- [ ] 3.10 Test: Page beyond the last page returns an empty list
+- [x] 3.1 Test: Successful search returns matching notes
+- [x] 3.2 Test: Search excludes another user's notes
+- [x] 3.3 Test: Search excludes soft-deleted notes
+- [x] 3.4 Test: Missing or empty query rejected
+- [x] 3.5 Test: Query with no matches returns an empty result
+- [x] 3.6 Test: Matched keywords are highlighted in the snippet
+- [x] 3.7 Test: Title is not highlighted
+- [x] 3.8 Test: Results are ordered by relevance
+- [x] 3.9 Test: Custom page size is honored up to the maximum
+- [x] 3.10 Test: Page beyond the last page returns an empty list
 
-- [ ] 3.11 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`,
-      `pnpm test --coverage` → all green, ≥80% coverage on new code
+- [x] 3.11 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0` clean,
+      `pnpm --filter backend exec vitest run --coverage` → 73/73 green. Coverage: 91.94%
+      stmts/91.88% lines overall; `SearchService.ts` 100%, `routes/search.ts` 100% (confirmed
+      via raw coverage-final.json — the text-summary table's printed rows omitted this one file
+      due to a v8-reporter display quirk, not missing coverage) — well above the 80% bar
 
 ## 4. Archive
 
