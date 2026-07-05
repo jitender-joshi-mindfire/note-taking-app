@@ -174,6 +174,15 @@ data affected.
   this app has no collaborative editing (FRS 2.2), so true concurrent edits to one note by
   different actors cannot happen — only a single user's own near-simultaneous requests (e.g. a
   double-click) could trigger it, with no security or data-loss consequence.
+- **[Risk] A `deleteNote` call racing an in-flight `updateNote` from the same owner could apply
+  the update's `tx.note.update` after `deletedAt` was already set** (the update's final write is
+  scoped by `id` only, not re-checked against `deletedAt` — found during `/review`) →
+  Mitigation: accepted, same severity class as the risk above (self-inflicted, single-owner-only,
+  no cross-user exposure); has no observable effect through any current endpoint since a
+  soft-deleted note is 404 everywhere regardless of its `title`/`content`. Would only matter if a
+  future ticket (e.g. AB-1009's version history, or a future recovery UI) ever reads a
+  soft-deleted row's content directly — worth revisiting the compound-`where` approach then if
+  so, not before.
 - **[Risk] `content` is stored with zero validation** (per `/spec` clarification) → Mitigation:
   intentional — content is opaque TipTap JSON per `docs/SDS.md`; the backend is not meant to
   understand its structure, matching `frontend/CLAUDE.md`'s "treat as opaque blob" rule.
