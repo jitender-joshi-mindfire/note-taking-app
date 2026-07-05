@@ -16,7 +16,7 @@ interface NoteRecord {
   tags: { id: string; name: string; color: string | null }[];
 }
 
-function toNoteSummary(note: NoteRecord): NoteSummary {
+export function toNoteSummary(note: NoteRecord): NoteSummary {
   return {
     id: note.id,
     title: note.title,

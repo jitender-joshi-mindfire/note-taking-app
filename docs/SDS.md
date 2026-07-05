@@ -132,9 +132,9 @@ model ShareLink {
 Design notes:
 
 - **`searchVector`** is a generated `tsvector` column (title weighted `A`, content weighted `B`),
-  maintained via a Postgres trigger created in a raw-SQL migration (Prisma cannot express
-  generated tsvector columns natively) — this is an accepted architecture decision, log an ADR
-  when the migration lands.
+  maintained via a `BEFORE INSERT OR UPDATE` Postgres trigger created in a raw-SQL migration
+  (Prisma cannot express generated tsvector columns or triggers natively) — see
+  `docs/decisions/0002-tsvector-trigger-before-not-after.md`.
 - **Tag note-count** (FRS 5.2.1) is computed via Prisma's `_count` on the `notes` relation, not a
   denormalized counter column.
 - **Tag name uniqueness** (FRS 5.1.2) is case-insensitive, enforced via a hand-added raw SQL
@@ -232,7 +232,11 @@ Postgres `ts_headline`, `StartSel`/`StopSel` configured to emit `<mark>`/`</mark
 ### 6. Search Design (PostgreSQL FTS)
 
 - `Note.searchVector` = `setweight(to_tsvector('english', title), 'A') || setweight(to_tsvector('english', content), 'B')`,
-  maintained by an `AFTER INSERT OR UPDATE` trigger (raw SQL migration).
+  maintained by a `BEFORE INSERT OR UPDATE OF title, content` trigger (raw SQL migration) — a
+  `BEFORE` trigger is required so it can set `NEW.searchVector` in the same write; an `AFTER`
+  trigger (as this section previously said) would need a second `UPDATE` on the same row,
+  re-firing itself, and gains nothing. See
+  `docs/decisions/0002-tsvector-trigger-before-not-after.md`.
 - GIN index on `searchVector`.
 - Query parsing via `websearch_to_tsquery('english', :q)` — supports natural user input
   (quotes, `-exclude`, etc.) without the caller needing tsquery syntax knowledge.
@@ -307,6 +311,7 @@ Status code conventions used throughout:
 
 Log these (and any future ones) as ADRs in `docs/decisions/` once decided/implemented:
 
-1. Tsvector-trigger migration approach (Section 3).
+1. ~~Tsvector-trigger migration approach (Section 3).~~ Resolved in AB-1007 — see
+   `docs/decisions/0002-tsvector-trigger-before-not-after.md`.
 2. Version retention limit of 50 (Section 3) — revisit if product requirements change.
 3. Share token storage as plaintext vs. hashed (Section 7).
