@@ -4,5 +4,33 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  refreshTokens RefreshToken[]
+}
+
+model RefreshToken {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash   String    @unique
+  expiresAt   DateTime
+  createdAt   DateTime  @default(now())
+  revokedAt   DateTime?
+  // Set only when this token was revoked as part of rotation (i.e. replaced by a
+  // newer token via /refresh). Null if revoked via logout, or never revoked.
+  // Distinguishes "replay of a rotated token" (compromise signal) from "replay of
+  // a logout-revoked token" (already dead, no further action needed) in reuse
+  // detection — without this, a retried logout call would look identical to a
+  // stolen-token replay and incorrectly mass-revoke every other session.
+  rotatedToId String?
+
+  @@index([userId])
 }

@@ -172,7 +172,7 @@ Error body shape (Section 9) applies to every non-2xx response.
 |---|---|---|---|
 | `POST /auth/register` | `{ email, password }` | `201 { user, accessToken, refreshToken }` | `422` duplicate email; `400` validation (`fields[]`) |
 | `POST /auth/login` | `{ email, password }` | `200 { user, accessToken, refreshToken }` | `401` invalid credentials |
-| `POST /auth/logout` | `{ refreshToken }` | `204` | `401` invalid/missing token |
+| `POST /auth/logout` | `{ refreshToken }`, `Authorization: Bearer <accessToken>` required | `204` | `401` missing/invalid/expired access token, or refresh token not owned by caller |
 | `POST /auth/refresh` | `{ refreshToken }` | `200 { accessToken, refreshToken }` | `401` invalid/expired/reused token |
 | `POST /auth/forgot-password` | `{ email }` | `200` (always, no enumeration) | `400` invalid email format |
 | `POST /auth/reset-password` | `{ email, otp, newPassword }` | `200` | `400` invalid password; `401` wrong OTP; `410` expired OTP |
@@ -272,6 +272,7 @@ Status code conventions used throughout:
 | 409 | Conflict (duplicate tag name) |
 | 410 | Gone (expired OTP, expired share link) |
 | 422 | Unprocessable — duplicate email on registration |
+| 429 | Too many requests — rate limit exceeded (login/registration, FRS 3.5) |
 | 500 | Unhandled server error |
 
 ### 10. Testing Approach

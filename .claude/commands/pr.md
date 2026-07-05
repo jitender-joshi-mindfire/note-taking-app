@@ -1,5 +1,8 @@
 Prepare PR for: $ARGUMENTS
 
+$ARGUMENTS is the ticket ID. Look up its `OpenSpec Change` column in `docs/TICKETS.md` first
+(e.g. `AB-1002` → `ab-1002-user-auth`).
+
 Steps:
 
 1. Run, in order (fix any failures before proceeding — never proceed past a failing gate):
@@ -7,12 +10,14 @@ Steps:
    - `pnpm lint --max-warnings 0`
    - `pnpm test --coverage` → all green
    - `npx commitlint --from HEAD~1`
-2. Confirm `openspec archive $ARGUMENTS` has already run (it should have, at the end of
-   `/implement`) — the change must be under `openspec/archive/`, not `openspec/changes/`. If it
-   is still under `changes/`, run `openspec archive $ARGUMENTS` now.
+2. Confirm the change is archived (it should be, from the end of `/implement`) — find it with
+   `openspec/changes/archive/*-<change-name>` (date-prefixed, e.g.
+   `openspec/changes/archive/2026-07-04-ab-1002-user-auth/` — NOT a top-level
+   `openspec/archive/`). If it's still under `openspec/changes/<change-name>/` instead, run
+   `openspec archive <change-name>` now.
 3. Confirm `/review $ARGUMENTS` was run in a fresh terminal and returned all ✅.
 4. Run `git diff main --stat`.
-5. Read `openspec/archive/$ARGUMENTS/proposal.md` and `openspec/archive/$ARGUMENTS/specs/**/*.md`.
+5. Read `proposal.md` and `specs/**/*.md` from the archived change directory found in step 2.
 6. Look up this ticket's linked GitHub issue number in `docs/TICKETS.md`.
 7. Generate the commit message:
    ```
@@ -44,8 +49,10 @@ Steps:
    `git commit`, `git push`, and `gh pr create --title "..." --body "..."` without asking for
    `[y/n]` confirmation first. Report back the commit SHA and PR URL once done. (This is a
    project-specific override — do not assume it applies to other repos.)
-10. Update this ticket's `Status` to `Done` in `docs/TICKETS.md` and include that update in the
-    same commit.
+10. Update this ticket's `Status` to `PR open (#N)` (the PR number from step 9) in
+    `docs/TICKETS.md` and include that update in the same commit. Do NOT set `Done` here —
+    that's reserved for after the PR is actually merged (update it manually, or via a follow-up
+    commit, once merge happens).
 
 PR description MUST list every FRS requirement covered and every spec scenario tested (no
 exceptions — this is required, not optional, for review).

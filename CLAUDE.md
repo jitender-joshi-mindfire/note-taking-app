@@ -87,8 +87,11 @@ Never proceed past a failing checkpoint.
   `reviewer` sub-agent is read-only and checks spec + FRS compliance only, no style feedback.
 - `/review` output must be all ✅ — no ❌ missing, ⚠️ drifted, 🔒 security, or 📋 FRS-gap
   findings — before running `/pr`.
-- Run `openspec archive AB-xxxx` before raising the PR — the change must move from
-  `openspec/changes/` to `openspec/archive/`.
+- Run `openspec archive <change-name>` before raising the PR (look up `<change-name>` — OpenSpec's
+  lowercase-kebab-case form, e.g. `ab-1002-user-auth` — in `docs/TICKETS.md`'s `OpenSpec Change`
+  column). The change must move from `openspec/changes/<change-name>/` to
+  `openspec/changes/archive/<YYYY-MM-DD>-<change-name>/` (date-prefixed; not a top-level
+  `openspec/archive/`).
 - PR description must list every FRS requirement covered and every spec scenario tested.
 
 ## Data & Dependency Rules

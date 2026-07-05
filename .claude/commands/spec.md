@@ -16,17 +16,22 @@ Steps:
 6. Read `AGENTS.md` and the relevant domain `CLAUDE.md` for constraints.
 7. Ask clarifying questions — minimum 3, maximum 8. Do not guess at ambiguous requirements;
    these questions catch bugs before a single line of code is written.
-8. If `openspec/changes/$ARGUMENTS/` does not exist yet, run:
-   `openspec new change $ARGUMENTS --description "<one-line ticket summary from docs/TICKETS.md>"`
-9. Run `openspec instructions proposal --change $ARGUMENTS` and follow its output exactly to
-   write `openspec/changes/$ARGUMENTS/proposal.md`. Every capability/spec delta MUST trace to a
-   numbered FRS requirement — cite the requirement IDs in the proposal.
-10. Run `openspec instructions specs --change $ARGUMENTS` and follow its output exactly to write
-    the scenario delta file(s) at `openspec/changes/$ARGUMENTS/specs/<capability>/spec.md`
+8. OpenSpec requires a lowercase kebab-case change name — `$ARGUMENTS` (e.g. `AB-1002`) will be
+   rejected as-is. Derive a change name as `<lowercase-ticket-id>-<short-descriptive-slug>`
+   (e.g. `ab-1002-user-auth`). If `openspec/changes/<change-name>/` does not exist yet, run:
+   `openspec new change <change-name> --description "<one-line ticket summary from docs/TICKETS.md>"`
+9. Run `openspec instructions proposal --change <change-name>` and follow its output exactly to
+   write `openspec/changes/<change-name>/proposal.md`. Every capability/spec delta MUST trace to
+   a numbered FRS requirement — cite the requirement IDs in the proposal.
+10. Run `openspec instructions specs --change <change-name>` and follow its output exactly to
+    write the scenario delta file(s) at `openspec/changes/<change-name>/specs/<capability>/spec.md`
     (ADDED/MODIFIED/REMOVED, `#### Scenario:` with exactly 4 hashtags, WHEN/THEN format).
-11. Run `openspec validate $ARGUMENTS` — must pass before continuing.
+11. Run `openspec validate <change-name>` — must pass before continuing.
 12. Show the generated `proposal.md` and spec delta in full.
-13. Update this ticket's `Status` to `In progress` in `docs/TICKETS.md`.
+13. Update this ticket's row in `docs/TICKETS.md`: set `Status` to `In progress` and record
+    `<change-name>` in the `OpenSpec Change` column — this is the only place the ticket ID ↔
+    OpenSpec change name mapping is durably recorded, and `/plan`, `/tasks`, `/implement`,
+    `/review`, and `/pr` all depend on it.
 14. Do NOT proceed to `/plan` or write any implementation code.
 
 Ask `[y/n]` before writing `proposal.md` or any spec delta file.

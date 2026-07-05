@@ -109,6 +109,24 @@ it to set a new password.
 - Wrong/already-used OTP → reject.
 - New password fails complexity rule (see 3.1.2) → reject with field-level error.
 
+#### 3.5 Rate Limiting
+
+**Business rule:** Login and registration attempts are throttled to reduce brute-force and
+enumeration risk. Added during AB-1002 spec clarification — not part of the original
+requirements set.
+
+**Acceptance criteria:**
+
+- 3.5.1 — Login attempts SHALL be rate-limited per identifier (IP and/or email) within a rolling
+  window; exceeding the limit SHALL reject further attempts until the window resets.
+- 3.5.2 — Registration attempts SHALL be rate-limited per IP within a rolling window to prevent
+  automated mass account creation.
+
+**Error scenarios:**
+
+- Rate limit exceeded → reject with an appropriate "too many requests" response; do not reveal
+  whether the underlying credential was correct.
+
 ---
 
 ### 4. Notes CRUD
