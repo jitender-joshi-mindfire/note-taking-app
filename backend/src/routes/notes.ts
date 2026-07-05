@@ -21,6 +21,12 @@ import {
   revokeShareLink,
   ShareLinkNotFoundError,
 } from "../services/ShareService.js";
+import {
+  getVersion,
+  listVersions,
+  restoreVersion,
+  VersionNotFoundError,
+} from "../services/VersionService.js";
 
 export const notesRouter: RouterType = Router();
 
@@ -129,6 +135,53 @@ notesRouter.delete("/:id/share", async (req, res) => {
   } catch (err) {
     if (err instanceof NoteNotFoundError || err instanceof ShareLinkNotFoundError) {
       res.status(404).json({ error: { code: "NOT_FOUND", message: "Share link not found" } });
+      return;
+    }
+    throw err;
+  }
+});
+
+notesRouter.get("/:id/versions", async (req, res) => {
+  try {
+    const items = await listVersions(req.userId as string, req.params.id as string);
+    res.status(200).json({ items });
+  } catch (err) {
+    if (err instanceof NoteNotFoundError) {
+      res.status(404).json({ error: { code: "NOT_FOUND", message: "Note not found" } });
+      return;
+    }
+    throw err;
+  }
+});
+
+notesRouter.get("/:id/versions/:versionId", async (req, res) => {
+  try {
+    const version = await getVersion(
+      req.userId as string,
+      req.params.id as string,
+      req.params.versionId as string,
+    );
+    res.status(200).json({ version });
+  } catch (err) {
+    if (err instanceof NoteNotFoundError || err instanceof VersionNotFoundError) {
+      res.status(404).json({ error: { code: "NOT_FOUND", message: "Version not found" } });
+      return;
+    }
+    throw err;
+  }
+});
+
+notesRouter.post("/:id/versions/:versionId/restore", async (req, res) => {
+  try {
+    const note = await restoreVersion(
+      req.userId as string,
+      req.params.id as string,
+      req.params.versionId as string,
+    );
+    res.status(201).json({ note });
+  } catch (err) {
+    if (err instanceof NoteNotFoundError || err instanceof VersionNotFoundError) {
+      res.status(404).json({ error: { code: "NOT_FOUND", message: "Version not found" } });
       return;
     }
     throw err;

@@ -13,25 +13,27 @@
 
 No `[PARALLEL]` tasks — AB-1009 is backend-only (no frontend component; that's AB-1015).
 
-- [ ] 2.1 Create `backend/src/services/VersionService.ts`: `listVersions` (ownership check +
+- [x] 2.1 Create `backend/src/services/VersionService.ts`: `listVersions` (ownership check +
       `findMany` ordered newest first), `getVersion` (ownership check + `{ id: versionId,
       noteId }` lookup, Decision 3), `restoreVersion` (ownership check + `{ id: versionId,
       noteId }` lookup + delegate to `NoteService.updateNote`, Decision 1); reuses
       `NoteService`'s exported `NoteNotFoundError`; new `VersionNotFoundError`
-- [ ] 2.2 Update `backend/src/services/NoteService.ts`: add `MAX_RETAINED_VERSIONS = 50`;
+- [x] 2.2 Update `backend/src/services/NoteService.ts`: add `MAX_RETAINED_VERSIONS = 50`;
       `updateNote`'s transaction gains the count-then-purge-oldest step (Decision 2)
       immediately after the existing `tx.noteVersion.create(...)` call
-- [ ] 2.3 Update `backend/src/routes/notes.ts`: add `GET /:id/versions`, `GET
+- [x] 2.3 Update `backend/src/routes/notes.ts`: add `GET /:id/versions`, `GET
       /:id/versions/:versionId`, `POST /:id/versions/:versionId/restore` to the existing
       `notesRouter`, mapping `NoteNotFoundError`/`VersionNotFoundError` to 404
-- [ ] 2.4 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test` → all
-      green. Also manually smoke-test against the real dev Postgres: list versions for a note
-      with several edits (confirm newest-first order), view a specific version, confirm
-      requesting another note's version id 404s, restore an old version (confirm the note's
-      current title/content updates, confirm a new version was created capturing the
-      pre-restore state, confirm no existing version was deleted or reordered by the restore
-      itself), update a note 51+ times and confirm exactly 50 versions remain with the oldest
-      purged
+- [x] 2.4 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0` clean,
+      `pnpm --filter backend test` → 90/90 still green. Manually smoke-tested against the real
+      dev Postgres: listed versions for a note with several edits (confirmed newest-first
+      order), viewed a specific version, confirmed requesting another note's version id 404s on
+      both view and restore (IDOR check), restored an old version (confirmed the note's current
+      title/content updated, confirmed a new version was created capturing the pre-restore
+      state, confirmed the version count went from 2 to 3 with no existing version deleted or
+      reordered), updated a note 55 times (56 total version-creating writes) and confirmed
+      exactly 50 versions remain with the correct oldest (`v5`) and newest (`v54`) boundary —
+      every behavior matched the design exactly
 
 ## 3. Tests (one per spec scenario)
 
