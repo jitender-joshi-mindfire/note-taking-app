@@ -103,16 +103,35 @@ export async function refresh(refreshToken: string): Promise<AuthTokens> {
     throw new InvalidRefreshTokenError();
   }
 
-  // Atomically claim this token: the WHERE clause requires revokedAt to still be
-  // null, so if two concurrent requests race to refresh the same token, only one
-  // `updateMany` can possibly match and revoke it. This closes the check-then-act
-  // race that existed when "is it revoked?" was a separate read from the write.
-  const claim = await prisma.refreshToken.updateMany({
-    where: { id: tokenRow.id, revokedAt: null },
-    data: { revokedAt: new Date() },
+  const newRawToken = generateRefreshToken();
+
+  // Atomically claim this token (WHERE requires revokedAt to still be null, so
+  // concurrent requests can't both win) and issue its replacement in the same
+  // interactive transaction — matching design.md's "both in one prisma.$transaction"
+  // decision, so a crash between the two statements can't revoke the old token
+  // without ever issuing a replacement.
+  const rotated = await prisma.$transaction(async (tx) => {
+    const claim = await tx.refreshToken.updateMany({
+      where: { id: tokenRow.id, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+
+    if (claim.count === 0) {
+      return false;
+    }
+
+    await tx.refreshToken.create({
+      data: {
+        userId: tokenRow.userId,
+        tokenHash: hashToken(newRawToken),
+        expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL_MS),
+      },
+    });
+
+    return true;
   });
 
-  if (claim.count === 0) {
+  if (!rotated) {
     // Someone else already claimed/revoked this token first (or it was already
     // revoked, e.g. via logout) — reuse detected, treat as compromise.
     await prisma.refreshToken.updateMany({
@@ -121,15 +140,6 @@ export async function refresh(refreshToken: string): Promise<AuthTokens> {
     });
     throw new InvalidRefreshTokenError();
   }
-
-  const newRawToken = generateRefreshToken();
-  await prisma.refreshToken.create({
-    data: {
-      userId: tokenRow.userId,
-      tokenHash: hashToken(newRawToken),
-      expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL_MS),
-    },
-  });
 
   const accessToken = signAccessToken(tokenRow.userId);
 
