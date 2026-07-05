@@ -103,7 +103,7 @@ model Tag {
 
   notes     Note[]   @relation("NoteTags")
 
-  @@unique([userId, name])
+  @@index([userId])
 }
 
 model NoteVersion {
@@ -137,6 +137,9 @@ Design notes:
   when the migration lands.
 - **Tag note-count** (FRS 5.2.1) is computed via Prisma's `_count` on the `notes` relation, not a
   denormalized counter column.
+- **Tag name uniqueness** (FRS 5.1.2) is case-insensitive, enforced via a hand-added raw SQL
+  functional unique index on `(userId, lower(name))` rather than Prisma's `@@unique` (which can't
+  express `lower()`) — see `docs/decisions/0001-tag-name-case-insensitive-uniqueness.md`.
 - **`ShareLink` is one-to-one with `Note`** per FRS 7.1.3 (one active link per note — generating a
   new one replaces the old row rather than inserting a second).
 - **Soft delete** (FRS 4.4) uses `deletedAt` on `Note` only. All queries for a user's notes MUST
@@ -184,8 +187,13 @@ Error body shape (Section 9) applies to every non-2xx response.
 | `POST /notes` | `{ title, content }` | `201 { note }` | `400` validation |
 | `GET /notes` | query: `page, pageSize, sortBy, sortDir, tagIds[]` | `200 { items[], total, page, pageSize }` | `400` invalid query params |
 | `GET /notes/:id` | — | `200 { note }` | `404` not found/not owned |
-| `PATCH /notes/:id` | `{ title?, content? }` | `200 { note }` | `404`; `400` validation |
+| `PATCH /notes/:id` | `{ title?, content?, tagIds? }` | `200 { note }` | `404`; `400` validation |
 | `DELETE /notes/:id` | — | `204` (soft delete) | `404` |
+
+Every `note` object (both the single-note shape and each `items[]` entry) includes
+`tags: [{ id, name, color }]` — the note's currently attached tags. `tagIds` on `PATCH` is a
+full replace-set (not incremental add/remove); an empty array clears all tags; a `tagIds` id not
+owned by the caller is rejected with `400` and the request does not partially apply.
 
 #### Tags
 

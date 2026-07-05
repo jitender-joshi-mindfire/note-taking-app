@@ -16,6 +16,7 @@ model User {
   refreshTokens RefreshToken[]
   resetOtps     PasswordResetOtp[]
   notes         Note[]
+  tags          Tag[]
 }
 
 model RefreshToken {
@@ -60,6 +61,7 @@ model Note {
   updatedAt DateTime  @updatedAt
 
   versions  NoteVersion[]
+  tags      Tag[]         @relation("NoteTags")
 
   @@index([userId, deletedAt])
 }
@@ -73,4 +75,17 @@ model NoteVersion {
   createdAt DateTime @default(now())
 
   @@index([noteId, createdAt])
+}
+
+model Tag {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  color     String?
+  createdAt DateTime @default(now())
+
+  notes     Note[]   @relation("NoteTags")
+
+  @@index([userId])
 }

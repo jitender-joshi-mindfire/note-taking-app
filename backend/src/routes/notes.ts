@@ -6,6 +6,7 @@ import {
   createNote,
   deleteNote,
   getNote,
+  InvalidTagIdsError,
   listNotes,
   NoteNotFoundError,
   updateNote,
@@ -63,6 +64,12 @@ notesRouter.patch("/:id", async (req, res) => {
   } catch (err) {
     if (err instanceof NoteNotFoundError) {
       res.status(404).json({ error: { code: "NOT_FOUND", message: "Note not found" } });
+      return;
+    }
+    if (err instanceof InvalidTagIdsError) {
+      res.status(400).json({
+        error: { code: "INVALID_TAG_IDS", message: "One or more tagIds do not exist or are not owned by you" },
+      });
       return;
     }
     throw err;

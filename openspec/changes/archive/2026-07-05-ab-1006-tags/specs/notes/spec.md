@@ -1,25 +1,4 @@
-# notes Specification
-
-## Purpose
-TBD - created by archiving change ab-1004-notes-crud. Update Purpose after archive.
-## Requirements
-### Requirement: Note Creation
-The system SHALL allow an authenticated user to create a note with a required, non-empty
-`title` and a `content` field that may be empty. The created note SHALL belong only to the
-authenticated caller. Creating a note SHALL produce its first version snapshot.
-
-#### Scenario: Successful note creation
-- **WHEN** an authenticated client submits a non-empty title and any content (including empty)
-- **THEN** the system creates the note owned by that caller and returns 201 with the note
-
-#### Scenario: Empty title rejected
-- **WHEN** an authenticated client submits a request with a missing or empty title
-- **THEN** the system rejects with 400 and a field-level error for `title`
-
-#### Scenario: Creation produces the first version snapshot
-- **WHEN** a note is successfully created
-- **THEN** the system creates exactly one `NoteVersion` capturing that note's initial title and
-  content
+## MODIFIED Requirements
 
 ### Requirement: Note Retrieval
 The system SHALL allow an authenticated user to list their own, non-deleted notes and to read
@@ -128,24 +107,3 @@ return not-found.
 - **WHEN** an authenticated client updates their own note with `tagIds` containing an id that
   does not exist or belongs to a different user
 - **THEN** the system rejects with 400 and does not modify the note's tags
-
-### Requirement: Note Soft Delete
-The system SHALL delete a note by setting a `deletedAt` timestamp only — the row itself SHALL
-NOT be physically removed. Soft-deleted notes SHALL no longer appear in list or detail
-endpoints for the owner. Deleting a note not owned by the caller SHALL return not-found.
-
-#### Scenario: Delete sets deletedAt instead of removing the row
-- **WHEN** an authenticated client deletes their own note
-- **THEN** the system sets that note's `deletedAt` to the current time, returns 204, and the
-  underlying row still exists in the database
-
-#### Scenario: Soft-deleted notes disappear from list and detail endpoints
-- **WHEN** a note has been soft-deleted
-- **THEN** it no longer appears in the owner's note list, and requesting it directly by id
-  returns 404
-
-#### Scenario: Deleting a note not owned by the caller returns not found
-- **WHEN** an authenticated client attempts to delete a note that exists but belongs to a
-  different user
-- **THEN** the system returns 404 and does not delete the note
-
