@@ -63,6 +63,7 @@ model Note {
 
   versions  NoteVersion[]
   tags      Tag[]         @relation("NoteTags")
+  shareLink ShareLink?
 
   @@index([userId, deletedAt])
 }
@@ -89,4 +90,15 @@ model Tag {
   notes     Note[]   @relation("NoteTags")
 
   @@index([userId])
+}
+
+model ShareLink {
+  id        String    @id @default(uuid())
+  noteId    String    @unique
+  note      Note      @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  token     String    @unique
+  viewCount Int       @default(0)
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
 }

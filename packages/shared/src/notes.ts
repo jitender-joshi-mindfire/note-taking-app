@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { ShareLinkRef } from "./sharing.js";
 import type { TagRef } from "./tags.js";
 
 export const createNoteSchema = z.object({
@@ -44,6 +45,7 @@ export interface NoteSummary {
   createdAt: string;
   updatedAt: string;
   tags: TagRef[];
+  shareLink: ShareLinkRef | null;
 }
 
 export interface NoteListResponse {

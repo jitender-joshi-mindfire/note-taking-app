@@ -1,52 +1,63 @@
 ## 1. Foundation
 
-- [ ] 1.1 Add `packages/shared/src/sharing.ts`: `generateShareLinkSchema`, `ShareLinkSummary`,
+- [x] 1.1 Add `packages/shared/src/sharing.ts`: `generateShareLinkSchema`, `ShareLinkSummary`,
       `ShareLinkRef`, `PublicNoteView` (design.md Shared Schemas); export from
       `packages/shared/src/index.ts`
-- [ ] 1.2 Update `packages/shared/src/notes.ts`: add `shareLink: ShareLinkRef | null` to
+- [x] 1.2 Update `packages/shared/src/notes.ts`: add `shareLink: ShareLinkRef | null` to
       `NoteSummary`
-- [ ] 1.3 Update `backend/prisma/schema.prisma`: add the `ShareLink` model (per SDS Section 3,
+- [x] 1.3 Update `backend/prisma/schema.prisma`: add the `ShareLink` model (per SDS Section 3,
       verbatim) and `shareLink ShareLink?` on `Note`
-- [ ] 1.4 Generate the migration: `npx prisma migrate dev --schema backend/prisma/schema.prisma
-      --name add_share_link`; confirm it's a standard, fully-Prisma-generated migration (no
-      hand-editing expected this time — no `Unsupported` types or triggers involved); apply to
-      both the dev and test databases; run `pnpm --filter backend prisma:generate`
-- [ ] 1.5 Add `APP_BASE_URL="http://localhost:3000"` to `backend/.env.example`, `backend/.env`,
-      and `backend/.env.test`
-- [ ] 1.6 Update `docs/SDS.md`: add a one-line note near the existing `tags`-field note (added by
-      AB-1006) documenting that note responses also include a `shareLink` field
-- [ ] 1.7 Checkpoint: `packages/shared` builds cleanly in isolation, `pnpm lint --max-warnings 0`
-      passes repo-wide, `pnpm --filter backend test` → still green. The full-repo `pnpm build`
-      is NOT expected to pass yet — `NoteSummary.shareLink` is now required but
-      `NoteService.ts` doesn't populate it until task 2.3 (same expected sequencing gap as
-      AB-1006's Phase 1); the full green `pnpm build` checkpoint carries into 2.7
+- [x] 1.4 Generate the migration: `npx prisma migrate dev --schema backend/prisma/schema.prisma
+      --name add_share_link`. **Real gap caught**: Prisma's auto-generated migration included a
+      `DROP INDEX "Note_searchVector_idx"` — it treats AB-1007's hand-added GIN index (on an
+      `Unsupported` column) as drift to remove, since nothing in `schema.prisma` declares it.
+      Removed that line before applying (replaced with an explanatory comment warning this will
+      recur on every future migration touching this schema). Applied to both dev and test
+      databases; verified via `psql` that `Note_searchVector_idx` survived in both; ran
+      `pnpm --filter backend prisma:generate`
+- [x] 1.5 Added `APP_BASE_URL="http://localhost:3000"` to `backend/.env.example`,
+      `backend/.env`, and `backend/.env.test`
+- [x] 1.6 Updated `docs/SDS.md`: added a note directly below the existing `tags`-field note (from
+      AB-1006) documenting the `shareLink` field
+- [x] 1.7 Checkpoint: `packages/shared` builds cleanly in isolation, `pnpm lint --max-warnings 0`
+      passes repo-wide, `pnpm --filter backend test` → 73/73 still green. The full-repo
+      `pnpm build` does not pass yet — `NoteSummary.shareLink` is required but `NoteService.ts`
+      doesn't populate it until task 2.3 (same expected sequencing gap as AB-1006's Phase 1);
+      carries into 2.7
 
 ## 2. Core Implementation
 
 No `[PARALLEL]` tasks — AB-1008 is backend-only (no frontend component; that's AB-1014).
 
-- [ ] 2.1 Create `backend/src/lib/shareUrl.ts`: `buildShareUrl(token)` per design.md Decision 3
-- [ ] 2.2 Create `backend/src/services/ShareService.ts`: `generateShareLink` (Decision 2,
+- [x] 2.1 Create `backend/src/lib/shareUrl.ts`: `buildShareUrl(token)` per design.md Decision 3
+- [x] 2.2 Create `backend/src/services/ShareService.ts`: `generateShareLink` (Decision 2,
       `upsert`), `revokeShareLink`, `viewSharedNote` (Decision 1, atomic
       claim-then-classify); reuses `NoteService`'s exported `NoteNotFoundError` for the
       ownership-scoped endpoints; new `ShareLinkNotFoundError` and `ShareLinkExpiredError`
-- [ ] 2.3 Update `backend/src/services/NoteService.ts`: `toNoteSummary` maps `shareLink` per
+- [x] 2.3 Update `backend/src/services/NoteService.ts`: `toNoteSummary` maps `shareLink` per
       Decision 4 (null unless `revokedAt === null AND expiresAt > now`); `createNote` passes
       `shareLink: null`; `listNotes`/`getNote`/`updateNote` add `include: { shareLink: true }`
       alongside the existing `tags: true`; `deleteNote` becomes a `prisma.$transaction`
-      revoking the note's active share link in the same operation (FRS 4.4.4)
-- [ ] 2.4 Update `backend/src/routes/notes.ts`: add `POST /:id/share` and `DELETE /:id/share` to
+      revoking the note's active share link in the same operation (FRS 4.4.4). Also updated
+      `SearchService.ts` (AB-1007) to add the same `shareLink: true` include, since it also
+      calls the now-changed `toNoteSummary`
+- [x] 2.4 Update `backend/src/routes/notes.ts`: add `POST /:id/share` and `DELETE /:id/share` to
       the existing `notesRouter` (already `requireAuth`-gated)
-- [ ] 2.5 Create `backend/src/routes/share.ts`: `GET /:token`, public, no `requireAuth`
-- [ ] 2.6 Mount `shareRouter` at `/api/share` in `backend/src/app.ts`
-- [ ] 2.7 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test` → all
-      green. Also manually smoke-test against the real dev Postgres per design.md's flagged
-      Context7-unverified risks: generate a link (confirm token/url/expiresAt), regenerate
-      (confirm new token, view count reset to 0, old token now 404s), view it publicly (confirm
-      content returned, view count increments), revoke it (confirm 404 on subsequent public
-      view), manually set an `expiresAt` in the past via `psql` and confirm 410 with no
-      increment, confirm cross-user 404s on generate/revoke, confirm deleting a note with an
-      active link revokes it (subsequent public view 404s)
+- [x] 2.5 Create `backend/src/routes/share.ts`: `GET /:token`, public, no `requireAuth`
+- [x] 2.6 Mount `shareRouter` at `/api/share` in `backend/src/app.ts`
+- [x] 2.7 Checkpoint: `pnpm build` → 0 errors (after fixing the expected ripple into
+      `SearchService.ts`), `pnpm lint --max-warnings 0` clean, `pnpm --filter backend test` →
+      73/73 still green. Manually smoke-tested against the real dev Postgres per design.md's
+      flagged risks: generated a link (confirmed token/url/expiresAt, and the note's own
+      `shareLink` field appearing with `viewCount: 0`), confirmed `expiresInDays` bounds reject
+      0 and 400, viewed it publicly with no auth header (confirmed content returned, view count
+      incremented to 1, then 2 on a second view), confirmed an unknown token 404s, revoked it
+      (confirmed subsequent public view 404s, and the note's own `shareLink` became `null`),
+      regenerated a link (confirmed a new token distinct from the old one, view count reset to
+      0, old token immediately 404s), manually set `expiresAt` in the past via `psql` and
+      confirmed 410 with the owner's `shareLink` field showing `null`, confirmed deleting a note
+      with an active link revokes it (subsequent public view 404s), confirmed cross-user 404s on
+      both generate and revoke — every behavior matched the design exactly
 
 ## 3. Tests (one per spec scenario)
 

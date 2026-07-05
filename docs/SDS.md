@@ -195,6 +195,10 @@ Every `note` object (both the single-note shape and each `items[]` entry) includ
 full replace-set (not incremental add/remove); an empty array clears all tags; a `tagIds` id not
 owned by the caller is rejected with `400` and the request does not partially apply.
 
+Every `note` object also includes `shareLink: { token, url, expiresAt, viewCount } | null` — the
+note's active share link, or `null` if it has none (including if its only link has expired or
+been revoked). See the Sharing table below for how a link is generated/revoked.
+
 #### Tags
 
 | Method & Path | Request | Success | Errors |

@@ -1,6 +1,7 @@
 import type { ListNotesQuery, NoteListResponse, NoteSummary } from "@note-taking-app/shared";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
+import { buildShareUrl } from "../lib/shareUrl.js";
 
 const MAX_PAGE_SIZE = 100;
 
@@ -14,9 +15,20 @@ interface NoteRecord {
   createdAt: Date;
   updatedAt: Date;
   tags: { id: string; name: string; color: string | null }[];
+  shareLink: {
+    token: string;
+    expiresAt: Date;
+    viewCount: number;
+    revokedAt: Date | null;
+  } | null;
 }
 
 export function toNoteSummary(note: NoteRecord): NoteSummary {
+  const activeShareLink =
+    note.shareLink && note.shareLink.revokedAt === null && note.shareLink.expiresAt > new Date()
+      ? note.shareLink
+      : null;
+
   return {
     id: note.id,
     title: note.title,
@@ -24,6 +36,14 @@ export function toNoteSummary(note: NoteRecord): NoteSummary {
     createdAt: note.createdAt.toISOString(),
     updatedAt: note.updatedAt.toISOString(),
     tags: note.tags.map((tag) => ({ id: tag.id, name: tag.name, color: tag.color })),
+    shareLink: activeShareLink
+      ? {
+          token: activeShareLink.token,
+          url: buildShareUrl(activeShareLink.token),
+          expiresAt: activeShareLink.expiresAt.toISOString(),
+          viewCount: activeShareLink.viewCount,
+        }
+      : null,
   };
 }
 
@@ -36,7 +56,7 @@ export async function createNote(userId: string, title: string, content: string)
     return created;
   });
 
-  return toNoteSummary({ ...note, tags: [] });
+  return toNoteSummary({ ...note, tags: [], shareLink: null });
 }
 
 export async function listNotes(
@@ -60,7 +80,7 @@ export async function listNotes(
       orderBy,
       skip: (page - 1) * pageSize,
       take: pageSize,
-      include: { tags: true },
+      include: { tags: true, shareLink: true },
     }),
     prisma.note.count({ where }),
   ]);
@@ -76,7 +96,7 @@ export async function listNotes(
 export async function getNote(userId: string, noteId: string): Promise<NoteSummary> {
   const note = await prisma.note.findFirst({
     where: { id: noteId, userId, deletedAt: null },
-    include: { tags: true },
+    include: { tags: true, shareLink: true },
   });
 
   if (!note) {
@@ -125,7 +145,7 @@ export async function updateNote(
           ? { tags: { set: updates.tagIds.map((id) => ({ id })) } }
           : {}),
       },
-      include: { tags: true },
+      include: { tags: true, shareLink: true },
     });
   });
 
@@ -133,12 +153,20 @@ export async function updateNote(
 }
 
 export async function deleteNote(userId: string, noteId: string): Promise<void> {
-  const result = await prisma.note.updateMany({
-    where: { id: noteId, userId, deletedAt: null },
-    data: { deletedAt: new Date() },
-  });
+  await prisma.$transaction(async (tx) => {
+    const result = await tx.note.updateMany({
+      where: { id: noteId, userId, deletedAt: null },
+      data: { deletedAt: new Date() },
+    });
 
-  if (result.count === 0) {
-    throw new NoteNotFoundError();
-  }
+    if (result.count === 0) {
+      throw new NoteNotFoundError();
+    }
+
+    // No-ops if there's no active share link — FRS 4.4.4.
+    await tx.shareLink.updateMany({
+      where: { noteId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+  });
 }
