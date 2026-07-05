@@ -12,24 +12,28 @@
 
 No `[PARALLEL]` tasks — AB-1003 is backend-only (no frontend component; that's part of AB-1010).
 
-- [ ] 2.1 Add `backend/src/lib/otp.ts`: `generateOtp()` — 6-digit numeric string via
-      `crypto.randomInt`, zero-padded; verify padding behavior empirically (flagged in
-      `design.md` as unverified without Context7)
-- [ ] 2.2 Add `forgotPasswordLimiter`, `resetPasswordLimiter` to
+- [x] 2.1 Add `backend/src/lib/otp.ts`: `generateOtp()` — 6-digit numeric string via
+      `crypto.randomInt`, zero-padded; verified empirically (`randomInt` does NOT auto-pad,
+      `.padStart(6, "0")` is required)
+- [x] 2.2 Add `forgotPasswordLimiter`, `resetPasswordLimiter` to
       `backend/src/middleware/rateLimit.ts`
-- [ ] 2.3 Add `InvalidOtpError`, `ExpiredOtpError` to `backend/src/services/AuthService.ts`
-- [ ] 2.4 `AuthService.requestPasswordReset(email)`: look up user (case-insensitive), if found
+- [x] 2.3 Add `InvalidOtpError`, `ExpiredOtpError` to `backend/src/services/AuthService.ts`
+- [x] 2.4 `AuthService.requestPasswordReset(email)`: look up user (case-insensitive), if found
       delete existing `PasswordResetOtp` rows for that user and create a new one in one
       `$transaction`, log the OTP to console; apply the response-time floor (Decision 2) on
       both the found and not-found paths
-- [ ] 2.5 `AuthService.confirmPasswordReset(email, otp, newPassword)`: validate OTP first
+- [x] 2.5 `AuthService.confirmPasswordReset(email, otp, newPassword)`: validate OTP first
       (expired → `ExpiredOtpError`, wrong/used → `InvalidOtpError`), then validate password
       complexity, then update password hash, mark OTP used, revoke all refresh tokens for
       that user
-- [ ] 2.6 Add `POST /forgot-password`, `POST /reset-password` to `backend/src/routes/auth.ts`
+- [x] 2.6 Add `POST /forgot-password`, `POST /reset-password` to `backend/src/routes/auth.ts`
       with correct middleware order (rate limiter → Zod validation → service call) and status
       code mapping (410 expired, 401 wrong/used, 400 weak password)
-- [ ] 2.7 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test` → all green
+- [x] 2.7 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test` → all
+      green. Also manually smoke-tested both endpoints against a real Postgres instance
+      (forgot-password for existing/nonexistent accounts with timing check, OTP invalidation on
+      re-request, successful reset, old-password-dead, OTP single-use, wrong OTP, rate limiting)
+      — all behaved correctly.
 
 ## 3. Tests (one per spec scenario)
 

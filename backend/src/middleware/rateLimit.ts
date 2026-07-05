@@ -30,3 +30,19 @@ export const registerLimiter = rateLimit({
   legacyHeaders: false,
   message: rateLimitedResponse,
 });
+
+export const forgotPasswordLimiter = rateLimit({
+  windowMs: WINDOW_MS,
+  limit: LIMIT,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: rateLimitedResponse,
+});
+
+export const resetPasswordLimiter = rateLimit({
+  windowMs: WINDOW_MS,
+  limit: LIMIT,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: rateLimitedResponse,
+});

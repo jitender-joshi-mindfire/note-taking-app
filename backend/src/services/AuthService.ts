@@ -3,12 +3,21 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
 import { comparePassword, generateRefreshToken, hashPassword, hashToken } from "../lib/hash.js";
 import { signAccessToken } from "../lib/jwt.js";
+import { generateOtp } from "../lib/otp.js";
 
 const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const OTP_TTL_MS = 10 * 60 * 1000;
+const FORGOT_PASSWORD_MIN_RESPONSE_MS = 50;
 
 export class DuplicateEmailError extends Error {}
 export class InvalidCredentialsError extends Error {}
 export class InvalidRefreshTokenError extends Error {}
+export class InvalidOtpError extends Error {}
+export class ExpiredOtpError extends Error {}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 interface AuthResult {
   user: AuthUser;
@@ -162,4 +171,74 @@ export async function refresh(refreshToken: string): Promise<AuthTokens> {
   const accessToken = signAccessToken(tokenRow.userId);
 
   return { accessToken, refreshToken: newRawToken };
+}
+
+export async function requestPasswordReset(email: string): Promise<void> {
+  const start = Date.now();
+  const normalizedEmail = email.toLowerCase();
+
+  const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+
+  if (user) {
+    const rawOtp = generateOtp();
+    await prisma.$transaction([
+      prisma.passwordResetOtp.deleteMany({ where: { userId: user.id } }),
+      prisma.passwordResetOtp.create({
+        data: {
+          userId: user.id,
+          otpHash: hashToken(rawOtp),
+          expiresAt: new Date(Date.now() + OTP_TTL_MS),
+        },
+      }),
+    ]);
+    console.log(`[OTP] password reset for ${normalizedEmail}: ${rawOtp}`);
+  }
+
+  // Pad the response to a fixed minimum duration regardless of whether the account
+  // existed, so timing can't be used to enumerate registered emails — the found
+  // path does real DB writes + a hash, the not-found path does nothing further, so
+  // without this the two branches would be trivially distinguishable (see design.md
+  // Decision 2; OTP hashing is SHA-256, too fast to equalize via a dummy hash the
+  // way AB-1002's login timing fix did for bcrypt).
+  const elapsed = Date.now() - start;
+  if (elapsed < FORGOT_PASSWORD_MIN_RESPONSE_MS) {
+    await sleep(FORGOT_PASSWORD_MIN_RESPONSE_MS - elapsed);
+  }
+}
+
+export async function confirmPasswordReset(
+  email: string,
+  otp: string,
+  newPassword: string,
+): Promise<void> {
+  const normalizedEmail = email.toLowerCase();
+
+  const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+  if (!user) {
+    throw new InvalidOtpError();
+  }
+
+  const otpRow = await prisma.passwordResetOtp.findFirst({
+    where: { userId: user.id },
+    orderBy: { createdAt: "desc" },
+  });
+
+  if (!otpRow || otpRow.usedAt || otpRow.otpHash !== hashToken(otp)) {
+    throw new InvalidOtpError();
+  }
+
+  if (otpRow.expiresAt < new Date()) {
+    throw new ExpiredOtpError();
+  }
+
+  const passwordHash = await hashPassword(newPassword);
+
+  await prisma.$transaction([
+    prisma.user.update({ where: { id: user.id }, data: { passwordHash } }),
+    prisma.passwordResetOtp.update({ where: { id: otpRow.id }, data: { usedAt: new Date() } }),
+    prisma.refreshToken.updateMany({
+      where: { userId: user.id, revokedAt: null },
+      data: { revokedAt: new Date() },
+    }),
+  ]);
 }

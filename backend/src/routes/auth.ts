@@ -1,15 +1,31 @@
 import { type Router as RouterType, Router } from "express";
-import { loginSchema, logoutSchema, refreshSchema, registerSchema } from "@note-taking-app/shared";
-import { loginLimiter, registerLimiter } from "../middleware/rateLimit.js";
+import {
+  forgotPasswordSchema,
+  loginSchema,
+  logoutSchema,
+  refreshSchema,
+  registerSchema,
+  resetPasswordSchema,
+} from "@note-taking-app/shared";
+import {
+  forgotPasswordLimiter,
+  loginLimiter,
+  registerLimiter,
+  resetPasswordLimiter,
+} from "../middleware/rateLimit.js";
 import { requireAuth } from "../middleware/requireAuth.js";
 import {
+  confirmPasswordReset,
   DuplicateEmailError,
+  ExpiredOtpError,
   InvalidCredentialsError,
+  InvalidOtpError,
   InvalidRefreshTokenError,
   login,
   logout,
   refresh,
   register,
+  requestPasswordReset,
 } from "../services/AuthService.js";
 
 export const authRouter: RouterType = Router();
@@ -105,6 +121,40 @@ authRouter.post("/refresh", async (req, res) => {
           message: "Invalid, expired, or reused refresh token",
         },
       });
+      return;
+    }
+    throw err;
+  }
+});
+
+authRouter.post("/forgot-password", forgotPasswordLimiter, async (req, res) => {
+  const parsed = forgotPasswordSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json(validationError("Invalid email", parsed.error.issues));
+    return;
+  }
+
+  await requestPasswordReset(parsed.data.email);
+  res.status(200).json({});
+});
+
+authRouter.post("/reset-password", resetPasswordLimiter, async (req, res) => {
+  const parsed = resetPasswordSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json(validationError("Invalid reset data", parsed.error.issues));
+    return;
+  }
+
+  try {
+    await confirmPasswordReset(parsed.data.email, parsed.data.otp, parsed.data.newPassword);
+    res.status(200).json({});
+  } catch (err) {
+    if (err instanceof ExpiredOtpError) {
+      res.status(410).json({ error: { code: "EXPIRED_OTP", message: "OTP has expired" } });
+      return;
+    }
+    if (err instanceof InvalidOtpError) {
+      res.status(401).json({ error: { code: "INVALID_OTP", message: "Invalid or used OTP" } });
       return;
     }
     throw err;
