@@ -8,7 +8,7 @@ adding new rate limiters and service functions — this is purely additive to `u
 ## Goals / Non-Goals
 
 **Goals:**
-- Implement forgot-password/reset-password exactly per the spec delta (11 scenarios).
+- Implement forgot-password/reset-password exactly per the spec delta (9 scenarios).
 - Close the same class of timing side-channel AB-1002's login review caught, but adapted to
   this endpoint's actual cost profile (SHA-256 OTP hashing, not bcrypt — see Decision 2).
 
@@ -68,7 +68,7 @@ unnecessarily; separate limiters match the existing per-endpoint convention.
 - `backend/src/routes/auth.ts` — **modify**: add `POST /forgot-password`, `POST /reset-password`
 - `packages/shared/src/auth.ts` — **modify**: add `forgotPasswordSchema`, `resetPasswordSchema`
   (reusing the existing `passwordSchema` for the new-password field)
-- `backend/tests/auth.test.ts` — **modify**: add 11 tests, one per spec scenario
+- `backend/tests/auth.test.ts` — **modify**: add 9 tests, one per spec scenario
 
 ## TypeScript Interfaces / Zod Schemas (packages/shared/src/auth.ts additions)
 
