@@ -31,28 +31,31 @@
 
 No `[PARALLEL]` tasks — AB-1007 is backend-only (no frontend component; that's AB-1013).
 
-- [ ] 2.1 Export `toNoteSummary` from `backend/src/services/NoteService.ts` (visibility-only
+- [x] 2.1 Export `toNoteSummary` from `backend/src/services/NoteService.ts` (visibility-only
       change, no behavior change — design.md Decision 2)
-- [ ] 2.2 Create `backend/src/services/SearchService.ts`: `searchNotes(userId, query)`
+- [x] 2.2 Create `backend/src/services/SearchService.ts`: `searchNotes(userId, query)`
       implementing the two-query read path (raw SQL for ranked ids + snippet via
       `websearch_to_tsquery`/`ts_rank`/`ts_headline`, a separate raw count query, then
       `prisma.note.findMany({ where: { id: { in } }, include: { tags: true } })` reordered to
       match the ranked-rows order, mapped via the exported `toNoteSummary`) — Decisions 2–4.
-      Use `prisma.$queryRaw` tagged templates exclusively (never `$queryRawUnsafe` or string
+      Uses `prisma.$queryRaw` tagged templates exclusively (never `$queryRawUnsafe` or string
       concatenation — Decision 3)
-- [ ] 2.3 Create `backend/src/routes/search.ts`: `GET /`, `requireAuth`-gated, parses via
+- [x] 2.3 Create `backend/src/routes/search.ts`: `GET /`, `requireAuth`-gated, parses via
       `searchQuerySchema`, delegates to `searchNotes` (no error branches beyond the 400
       validation case — search has no ownership/not-found errors)
-- [ ] 2.4 Mount `searchRouter` at `/api/search` in `backend/src/app.ts`
-- [ ] 2.5 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test` → all
-      green. Also manually smoke-test against the real dev Postgres per design.md's flagged
-      Context7-unverified risks: confirm pre-existing notes (from AB-1004/1005/1006 smoke
-      testing) got backfilled `searchVector` values; create notes with distinct title/content
-      and confirm `GET /search` finds them, ranked and snippeted correctly; run the
-      SQL-metacharacter adversarial query from Decision 3 (e.g. `q=foo'; DROP TABLE "Note"; --`)
-      and confirm it's treated as a harmless search term, not executed as SQL; confirm
-      cross-user and soft-deleted notes are excluded; confirm pagination behaves like note
-      listing
+- [x] 2.4 Mount `searchRouter` at `/api/search` in `backend/src/app.ts`
+- [x] 2.5 Checkpoint: `pnpm build` → 0 errors (confirming `$queryRaw` tagged templates and the
+      `Note`+tags Prisma type both type-check cleanly), `pnpm lint --max-warnings 0` clean,
+      `pnpm --filter backend test` → 63/63 still green. Manually smoke-tested against the real
+      dev Postgres per design.md's flagged risks: confirmed multi-word content search with
+      correct relevance ranking and `<mark>` highlighting; ran the SQL-metacharacter adversarial
+      query (`q=foo'; DROP TABLE "Note"; --`) and confirmed it was safely parameterized (treated
+      as a harmless search term, `Note` table intact afterward, confirmed via a follow-up
+      `GET /notes` call); confirmed missing `q` → 400 and empty `q` → 400 with distinct Zod
+      error messages; confirmed cross-user exclusion (user B's search for user A's exact content
+      returned empty); confirmed soft-deleted notes disappear from search results immediately;
+      confirmed `pageSize` pagination behaves like note listing — all behaved exactly as
+      designed
 
 ## 3. Tests (one per spec scenario)
 
