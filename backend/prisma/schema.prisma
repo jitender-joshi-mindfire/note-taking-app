@@ -14,6 +14,7 @@ model User {
   updatedAt    DateTime @updatedAt
 
   refreshTokens RefreshToken[]
+  resetOtps     PasswordResetOtp[]
 }
 
 model RefreshToken {
@@ -31,6 +32,18 @@ model RefreshToken {
   // detection — without this, a retried logout call would look identical to a
   // stolen-token replay and incorrectly mass-revoke every other session.
   rotatedToId String?
+
+  @@index([userId])
+}
+
+model PasswordResetOtp {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  otpHash   String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
 
   @@index([userId])
 }
