@@ -1,5 +1,5 @@
 import { type Router as RouterType, Router } from "express";
-import { createNoteSchema, updateNoteSchema } from "@note-taking-app/shared";
+import { createNoteSchema, listNotesQuerySchema, updateNoteSchema } from "@note-taking-app/shared";
 import { validationError } from "../lib/validation.js";
 import { requireAuth } from "../middleware/requireAuth.js";
 import {
@@ -27,7 +27,13 @@ notesRouter.post("/", async (req, res) => {
 });
 
 notesRouter.get("/", async (req, res) => {
-  const result = await listNotes(req.userId as string);
+  const parsed = listNotesQuerySchema.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json(validationError("Invalid query parameters", parsed.error.issues));
+    return;
+  }
+
+  const result = await listNotes(req.userId as string, parsed.data);
   res.status(200).json(result);
 });
 

@@ -1,8 +1,8 @@
-import type { NoteListResponse, NoteSummary } from "@note-taking-app/shared";
+import type { ListNotesQuery, NoteListResponse, NoteSummary } from "@note-taking-app/shared";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
 
-const DEFAULT_PAGE = 1;
-const DEFAULT_PAGE_SIZE = 20;
+const MAX_PAGE_SIZE = 100;
 
 export class NoteNotFoundError extends Error {}
 
@@ -36,15 +36,21 @@ export async function createNote(userId: string, title: string, content: string)
   return toNoteSummary(note);
 }
 
-export async function listNotes(userId: string): Promise<NoteListResponse> {
+export async function listNotes(
+  userId: string,
+  query: ListNotesQuery,
+): Promise<NoteListResponse> {
   const where = { userId, deletedAt: null };
+  const page = query.page;
+  const pageSize = Math.min(query.pageSize, MAX_PAGE_SIZE);
+  const orderBy: Prisma.NoteOrderByWithRelationInput = { [query.sortBy]: query.sortDir };
 
   const [items, total] = await Promise.all([
     prisma.note.findMany({
       where,
-      orderBy: { updatedAt: "desc" },
-      skip: (DEFAULT_PAGE - 1) * DEFAULT_PAGE_SIZE,
-      take: DEFAULT_PAGE_SIZE,
+      orderBy,
+      skip: (page - 1) * pageSize,
+      take: pageSize,
     }),
     prisma.note.count({ where }),
   ]);
@@ -52,8 +58,8 @@ export async function listNotes(userId: string): Promise<NoteListResponse> {
   return {
     items: items.map(toNoteSummary),
     total,
-    page: DEFAULT_PAGE,
-    pageSize: DEFAULT_PAGE_SIZE,
+    page,
+    pageSize,
   };
 }
 

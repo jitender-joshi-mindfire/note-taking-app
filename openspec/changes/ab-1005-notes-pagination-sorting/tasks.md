@@ -11,14 +11,18 @@ No DB migration this phase — design.md confirms no schema changes are needed.
 
 No `[PARALLEL]` tasks — AB-1005 is backend-only (no frontend component; that's AB-1011).
 
-- [ ] 2.1 Update `NoteService.listNotes` to accept `{ page, pageSize, sortBy, sortDir }`: clamp
+- [x] 2.1 Update `NoteService.listNotes` to accept `{ page, pageSize, sortBy, sortDir }`: clamp
       `pageSize` to 100 (design.md Decision 1), build `orderBy` dynamically from `sortBy`/`sortDir`
       (Decision 4); verify the computed `orderBy` type-checks against Prisma's
-      `NoteOrderByWithRelationInput` without needing an unsafe cast
-- [ ] 2.2 Update `GET /` in `backend/src/routes/notes.ts` to parse `req.query` through
+      `NoteOrderByWithRelationInput` without needing an unsafe cast — confirmed: type-checks
+      cleanly with no assertion needed, resolving design.md's flagged risk
+- [x] 2.2 Update `GET /` in `backend/src/routes/notes.ts` to parse `req.query` through
       `listNotesQuerySchema`, returning 400 via the existing `validationError` helper on failure
       (covers the invalid-`sortBy` rejection)
-- [ ] 2.3 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test` → all green
+- [x] 2.3 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test` → all
+      green. Also manually smoke-tested against a real Postgres instance: default sort, sort by
+      title asc, custom pageSize, pageSize capping at 100, invalid sortBy rejection, and
+      out-of-range page returning empty items — all behaved correctly.
 
 ## 3. Tests (one per spec scenario)
 
