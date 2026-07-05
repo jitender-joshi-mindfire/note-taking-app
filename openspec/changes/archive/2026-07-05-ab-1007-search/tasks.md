@@ -74,9 +74,13 @@ New file `backend/tests/search.test.ts` (10 scenarios):
 
 - [x] 3.11 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0` clean,
       `pnpm --filter backend exec vitest run --coverage` → 73/73 green. Coverage: 91.94%
-      stmts/91.88% lines overall; `SearchService.ts` 100%, `routes/search.ts` 100% (confirmed
-      via raw coverage-final.json — the text-summary table's printed rows omitted this one file
-      due to a v8-reporter display quirk, not missing coverage) — well above the 80% bar
+      stmts/91.88% lines overall; `SearchService.ts` 100% statement coverage, `routes/search.ts`
+      100% (confirmed via raw coverage-final.json — the text-summary table's printed rows
+      omitted this one file due to a v8-reporter display quirk, not missing coverage) — well
+      above the 80% bar. Note: `SearchService.ts`'s `if (note)` guard (defends against a note
+      disappearing between the ranked-rows query and the follow-up fetch — not reachable via the
+      public API since nothing hard-deletes notes) has no dedicated test for its false branch;
+      flagged by local review as a minor coverage-precision note, not a functional gap.
 
 ## 4. Archive
 
