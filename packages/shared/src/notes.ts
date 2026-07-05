@@ -14,8 +14,16 @@ export const updateNoteSchema = z
     message: "At least one of title or content must be provided",
   });
 
+export const listNotesQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).default(20),
+  sortBy: z.enum(["createdAt", "updatedAt", "title"]).default("updatedAt"),
+  sortDir: z.enum(["asc", "desc"]).default("desc"),
+});
+
 export type CreateNoteInput = z.infer<typeof createNoteSchema>;
 export type UpdateNoteInput = z.infer<typeof updateNoteSchema>;
+export type ListNotesQuery = z.infer<typeof listNotesQuerySchema>;
 
 export interface NoteSummary {
   id: string;

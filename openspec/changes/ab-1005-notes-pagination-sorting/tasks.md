@@ -1,9 +1,9 @@
 ## 1. Foundation
 
-- [ ] 1.1 Add `listNotesQuerySchema` to `packages/shared/src/notes.ts` (`page`, `pageSize`,
+- [x] 1.1 Add `listNotesQuerySchema` to `packages/shared/src/notes.ts` (`page`, `pageSize`,
       `sortBy`, `sortDir`, each with a Zod default per design.md); export the inferred
       `ListNotesQuery` type
-- [ ] 1.2 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test` → all green
+- [x] 1.2 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test` → all green
 
 No DB migration this phase — design.md confirms no schema changes are needed.
 
