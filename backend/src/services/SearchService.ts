@@ -50,7 +50,7 @@ export async function searchNotes(userId: string, query: SearchQuery): Promise<S
   const ids = rows.map((row) => row.id);
   const notes = await prisma.note.findMany({
     where: { id: { in: ids } },
-    include: { tags: true },
+    include: { tags: true, shareLink: true },
   });
   const noteById = new Map(notes.map((note) => [note.id, note]));
 

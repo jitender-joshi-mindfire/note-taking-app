@@ -195,6 +195,10 @@ Every `note` object (both the single-note shape and each `items[]` entry) includ
 full replace-set (not incremental add/remove); an empty array clears all tags; a `tagIds` id not
 owned by the caller is rejected with `400` and the request does not partially apply.
 
+Every `note` object also includes `shareLink: { token, url, expiresAt, viewCount } | null` — the
+note's active share link, or `null` if it has none (including if its only link has expired or
+been revoked). See the Sharing table below for how a link is generated/revoked.
+
 #### Tags
 
 | Method & Path | Request | Success | Errors |
@@ -248,9 +252,14 @@ Postgres `ts_headline`, `StartSel`/`StopSel` configured to emit `<mark>`/`</mark
 - `token` = 32 bytes from `crypto.randomBytes`, base64url-encoded, stored and looked up as
   plaintext (it is a capability URL, not a credential compared against a hash — entropy alone
   makes it unguessable).
-- View count increment MUST use an atomic DB update (`UPDATE ... SET viewCount = viewCount + 1`
-  via `prisma.shareLink.update({ data: { viewCount: { increment: 1 } } })`) — never
-  read-then-write in application code, to avoid lost updates under concurrent public views.
+- View count increment MUST use an atomic, conditionally-guarded DB update — implemented as
+  `prisma.shareLink.updateMany({ where: { token, revokedAt: null, expiresAt: { gt: now } },
+  data: { viewCount: { increment: 1 } } })` — never read-then-write in application code. The
+  `WHERE` guard makes the validity check and the increment a single atomic statement (not just
+  the increment alone), so a link can't be incremented for a view that shouldn't have counted
+  (e.g. expiring between a separate check and a separate increment). If the update's affected
+  row count is 0, a read-only follow-up query (no write) classifies the failure as 404
+  (unknown/revoked) or 410 (expired).
 - Expiry and revocation are both checked on every public read: `revokedAt IS NULL AND expiresAt > now()`.
 
 ### 8. Version History Design
