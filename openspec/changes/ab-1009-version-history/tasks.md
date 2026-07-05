@@ -1,0 +1,72 @@
+## 1. Foundation
+
+- [ ] 1.1 Add `packages/shared/src/versions.ts`: `NoteVersionSummary` (design.md Shared Schemas);
+      export from `packages/shared/src/index.ts`
+- [ ] 1.2 Confirm no `backend/prisma/schema.prisma` change is needed — `NoteVersion` already has
+      every column this ticket uses
+- [ ] 1.3 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test` → all
+      green. Unlike AB-1006/1008, no sequencing gap is expected here — `NoteVersionSummary` is a
+      standalone new type, not a required field added to an existing shared type
+
+## 2. Core Implementation
+
+No `[PARALLEL]` tasks — AB-1009 is backend-only (no frontend component; that's AB-1015).
+
+- [ ] 2.1 Create `backend/src/services/VersionService.ts`: `listVersions` (ownership check +
+      `findMany` ordered newest first), `getVersion` (ownership check + `{ id: versionId,
+      noteId }` lookup, Decision 3), `restoreVersion` (ownership check + `{ id: versionId,
+      noteId }` lookup + delegate to `NoteService.updateNote`, Decision 1); reuses
+      `NoteService`'s exported `NoteNotFoundError`; new `VersionNotFoundError`
+- [ ] 2.2 Update `backend/src/services/NoteService.ts`: add `MAX_RETAINED_VERSIONS = 50`;
+      `updateNote`'s transaction gains the count-then-purge-oldest step (Decision 2)
+      immediately after the existing `tx.noteVersion.create(...)` call
+- [ ] 2.3 Update `backend/src/routes/notes.ts`: add `GET /:id/versions`, `GET
+      /:id/versions/:versionId`, `POST /:id/versions/:versionId/restore` to the existing
+      `notesRouter`, mapping `NoteNotFoundError`/`VersionNotFoundError` to 404
+- [ ] 2.4 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test` → all
+      green. Also manually smoke-test against the real dev Postgres: list versions for a note
+      with several edits (confirm newest-first order), view a specific version, confirm
+      requesting another note's version id 404s, restore an old version (confirm the note's
+      current title/content updates, confirm a new version was created capturing the
+      pre-restore state, confirm no existing version was deleted or reordered by the restore
+      itself), update a note 51+ times and confirm exactly 50 versions remain with the oldest
+      purged
+
+## 3. Tests (one per spec scenario)
+
+**New capability `version-history`** (new file `backend/tests/versions.test.ts`, 10 scenarios):
+
+- [ ] 3.1 Test: Listing returns retained versions newest first
+- [ ] 3.2 Test: Listing versions for a note not owned by the caller returns not found
+- [ ] 3.3 Test: Listing versions for a soft-deleted note returns not found
+- [ ] 3.4 Test: Viewing a retained version returns its full content
+- [ ] 3.5 Test: Viewing a version for a note not owned by the caller returns not found
+- [ ] 3.6 Test: Viewing a version id that belongs to a different note returns not found
+- [ ] 3.7 Test: Restoring a version applies its content as the new current state
+- [ ] 3.8 Test: Restoring creates a new version without altering existing history
+- [ ] 3.9 Test: Restoring a note not owned by the caller returns not found
+- [ ] 3.10 Test: Restoring a version id that belongs to a different note returns not found
+
+**Modified capability `notes`** (`backend/tests/notes.test.ts`) — 7 of the 8 scenarios below
+already exist and are behaviorally unchanged by this ticket; confirm they still pass rather than
+rewriting them:
+
+- [ ] 3.11 Confirm existing: Partial update applies only the provided fields still passes
+- [ ] 3.12 Confirm existing: Update with no fields rejected still passes
+- [ ] 3.13 Confirm existing: Update creates a version snapshot of the prior state still passes
+- [ ] 3.14 Confirm existing: Updating a note not owned by the caller returns not found still
+      passes
+- [ ] 3.15 Confirm existing: Providing tagIds replaces the note's tag set still passes
+- [ ] 3.16 Confirm existing: Providing an empty tagIds array clears all tags still passes
+- [ ] 3.17 Confirm existing: tagIds referencing a tag not owned by the caller is rejected still
+      passes
+- [ ] 3.18 Test: Version history beyond 50 is automatically purged
+
+- [ ] 3.19 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`,
+      `pnpm test --coverage` → all green, ≥80% coverage on new code
+
+## 4. Archive
+
+- [ ] 4.1 Run `openspec archive ab-1009-version-history`
+- [ ] 4.2 Update `docs/TICKETS.md` AB-1009 status to `In progress` (not `Done` — that's set by
+      `/pr` as `PR open (#N)`, then manually after merge)
