@@ -74,6 +74,6 @@ rewriting them:
 
 ## 4. Archive
 
-- [ ] 4.1 Run `openspec archive ab-1009-version-history`
-- [ ] 4.2 Update `docs/TICKETS.md` AB-1009 status to `In progress` (not `Done` — that's set by
+- [x] 4.1 Run `openspec archive ab-1009-version-history`
+- [x] 4.2 Update `docs/TICKETS.md` AB-1009 status to `In progress` (not `Done` — that's set by
       `/pr` as `PR open (#N)`, then manually after merge)
