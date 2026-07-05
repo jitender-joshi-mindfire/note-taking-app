@@ -101,6 +101,9 @@ it to set a new password.
 - 3.4.4 — OTP SHALL be single-use — once consumed for a successful reset, it cannot be reused.
 - 3.4.5 — On successful reset, all of the user's existing refresh tokens SHALL be revoked
   (force re-login on all devices).
+- 3.4.6 — Requesting a new OTP SHALL invalidate any previously-issued, unused OTP for that
+  account — only the most recently issued OTP is valid. Added during AB-1003 spec
+  clarification.
 
 **Error scenarios:**
 
@@ -121,6 +124,10 @@ requirements set.
   window; exceeding the limit SHALL reject further attempts until the window resets.
 - 3.5.2 — Registration attempts SHALL be rate-limited per IP within a rolling window to prevent
   automated mass account creation.
+- 3.5.3 — Forgot-password requests SHALL be rate-limited per IP within a rolling window, same as
+  login/registration. Added during AB-1003 spec clarification.
+- 3.5.4 — Reset-password attempts SHALL be rate-limited per IP within a rolling window, same as
+  login/registration. Added during AB-1003 spec clarification.
 
 **Error scenarios:**
 
