@@ -189,6 +189,93 @@ describe("GET /api/notes", () => {
     expect(res.body.total).toBe(1);
     expect(res.body.page).toBe(999);
   });
+
+  it("Filtering by tag returns only notes having all specified tags", async () => {
+    const token = await registerAndGetToken("wanda-notes@example.com");
+
+    const tagA = await request(app)
+      .post("/api/tags")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ name: "TagA" });
+    const tagB = await request(app)
+      .post("/api/tags")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ name: "TagB" });
+    const tagAId = tagA.body.tag.id;
+    const tagBId = tagB.body.tag.id;
+
+    const noteBoth = await request(app)
+      .post("/api/notes")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ title: "Has both", content: "x" });
+    const noteOnlyA = await request(app)
+      .post("/api/notes")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ title: "Has only A", content: "x" });
+    const noteNeither = await request(app)
+      .post("/api/notes")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ title: "Has neither", content: "x" });
+
+    await request(app)
+      .patch(`/api/notes/${noteBoth.body.note.id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ tagIds: [tagAId, tagBId] });
+    await request(app)
+      .patch(`/api/notes/${noteOnlyA.body.note.id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ tagIds: [tagAId] });
+    void noteNeither;
+
+    const res = await request(app)
+      .get(`/api/notes?tagIds=${tagAId}&tagIds=${tagBId}`)
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.items).toHaveLength(1);
+    expect(res.body.items[0].id).toBe(noteBoth.body.note.id);
+  });
+
+  it("Filtering by a tag id not owned by the caller returns an empty list", async () => {
+    const token = await registerAndGetToken("xena-notes@example.com");
+
+    await request(app)
+      .post("/api/notes")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ title: "Some note", content: "x" });
+
+    const res = await request(app)
+      .get("/api/notes?tagIds=00000000-0000-0000-0000-000000000000")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.items).toHaveLength(0);
+  });
+
+  it("A listed note includes its attached tags", async () => {
+    const token = await registerAndGetToken("yusuf-notes@example.com");
+
+    const tag = await request(app)
+      .post("/api/tags")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ name: "Labeled", color: "#ABCDEF" });
+    const tagId = tag.body.tag.id;
+
+    const note = await request(app)
+      .post("/api/notes")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ title: "Tagged note", content: "x" });
+    await request(app)
+      .patch(`/api/notes/${note.body.note.id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ tagIds: [tagId] });
+
+    const res = await request(app).get("/api/notes").set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    const listed = res.body.items.find((n: { id: string }) => n.id === note.body.note.id);
+    expect(listed.tags).toEqual([{ id: tagId, name: "Labeled", color: "#ABCDEF" }]);
+  });
 });
 
 describe("GET /api/notes/:id", () => {
@@ -305,6 +392,93 @@ describe("PATCH /api/notes/:id", () => {
       where: { id: created.body.note.id },
     });
     expect(stillOriginal.title).toBe("A's note");
+  });
+
+  it("Providing tagIds replaces the note's tag set", async () => {
+    const token = await registerAndGetToken("noah-notes@example.com");
+
+    const tagA = await request(app)
+      .post("/api/tags")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ name: "TagAlpha" });
+    const tagB = await request(app)
+      .post("/api/tags")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ name: "TagBeta" });
+
+    const created = await request(app)
+      .post("/api/notes")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ title: "Note", content: "x" });
+
+    await request(app)
+      .patch(`/api/notes/${created.body.note.id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ tagIds: [tagA.body.tag.id] });
+
+    const res = await request(app)
+      .patch(`/api/notes/${created.body.note.id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ tagIds: [tagB.body.tag.id] });
+
+    expect(res.status).toBe(200);
+    expect(res.body.note.tags).toHaveLength(1);
+    expect(res.body.note.tags[0].id).toBe(tagB.body.tag.id);
+  });
+
+  it("Providing an empty tagIds array clears all tags", async () => {
+    const token = await registerAndGetToken("olivia-notes@example.com");
+
+    const tag = await request(app)
+      .post("/api/tags")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ name: "Removable" });
+
+    const created = await request(app)
+      .post("/api/notes")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ title: "Note", content: "x" });
+
+    await request(app)
+      .patch(`/api/notes/${created.body.note.id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ tagIds: [tag.body.tag.id] });
+
+    const res = await request(app)
+      .patch(`/api/notes/${created.body.note.id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ tagIds: [] });
+
+    expect(res.status).toBe(200);
+    expect(res.body.note.tags).toHaveLength(0);
+  });
+
+  it("tagIds referencing a tag not owned by the caller is rejected", async () => {
+    const tokenA = await registerAndGetToken("peter-notes@example.com");
+    const tokenB = await registerAndGetToken("quincy-notes@example.com");
+
+    const tagB = await request(app)
+      .post("/api/tags")
+      .set("Authorization", `Bearer ${tokenB}`)
+      .send({ name: "B's tag" });
+
+    const created = await request(app)
+      .post("/api/notes")
+      .set("Authorization", `Bearer ${tokenA}`)
+      .send({ title: "Note", content: "x" });
+
+    const res = await request(app)
+      .patch(`/api/notes/${created.body.note.id}`)
+      .set("Authorization", `Bearer ${tokenA}`)
+      .send({ tagIds: [tagB.body.tag.id] });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe("INVALID_TAG_IDS");
+
+    const stillNote = await request(app)
+      .get(`/api/notes/${created.body.note.id}`)
+      .set("Authorization", `Bearer ${tokenA}`);
+    expect(stillNote.body.note.tags).toHaveLength(0);
   });
 });
 
