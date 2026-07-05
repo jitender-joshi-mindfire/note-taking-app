@@ -150,6 +150,30 @@ describe("POST /api/auth/logout", () => {
 
     expect(res.status).toBe(401);
   });
+
+  it("Logout with another user's refresh token is rejected", async () => {
+    const userA = await request(app)
+      .post("/api/auth/register")
+      .send({ email: "leo@example.com", password: "password123" });
+    const userB = await request(app)
+      .post("/api/auth/register")
+      .send({ email: "mia@example.com", password: "password123" });
+
+    // User A's access token, but User B's refresh token — must not be allowed to
+    // revoke a session that doesn't belong to the authenticated caller.
+    const res = await request(app)
+      .post("/api/auth/logout")
+      .set("Authorization", `Bearer ${userA.body.accessToken}`)
+      .send({ refreshToken: userB.body.refreshToken });
+
+    expect(res.status).toBe(401);
+
+    // User B's refresh token must still work, proving it was never revoked by A's attempt.
+    const refreshRes = await request(app)
+      .post("/api/auth/refresh")
+      .send({ refreshToken: userB.body.refreshToken });
+    expect(refreshRes.status).toBe(200);
+  });
 });
 
 describe("POST /api/auth/refresh", () => {

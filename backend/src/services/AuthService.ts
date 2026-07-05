@@ -1,4 +1,5 @@
 import type { AuthTokens, AuthUser } from "@note-taking-app/shared";
+import { Prisma } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
 import { comparePassword, generateRefreshToken, hashPassword, hashToken } from "../lib/hash.js";
 import { signAccessToken } from "../lib/jwt.js";
@@ -33,16 +34,23 @@ async function issueRefreshToken(userId: string): Promise<string> {
 
 export async function register(email: string, password: string): Promise<AuthResult> {
   const normalizedEmail = email.toLowerCase();
-
-  const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } });
-  if (existing) {
-    throw new DuplicateEmailError();
-  }
-
   const passwordHash = await hashPassword(password);
-  const user = await prisma.user.create({
-    data: { email: normalizedEmail, passwordHash },
-  });
+
+  // Rely on the DB's unique constraint as the sole source of truth for uniqueness —
+  // a separate findUnique-then-create pre-check would leave a race window where two
+  // concurrent registrations for the same email could both pass the check before
+  // either insert commits. Catching the constraint violation here is atomic.
+  let user;
+  try {
+    user = await prisma.user.create({
+      data: { email: normalizedEmail, passwordHash },
+    });
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+      throw new DuplicateEmailError();
+    }
+    throw err;
+  }
 
   const accessToken = signAccessToken(user.id);
   const refreshToken = await issueRefreshToken(user.id);
@@ -91,8 +99,22 @@ export async function refresh(refreshToken: string): Promise<AuthTokens> {
     throw new InvalidRefreshTokenError();
   }
 
-  if (tokenRow.revokedAt) {
-    // Reuse of an already-rotated (or already-revoked) token — treat as compromise.
+  if (tokenRow.expiresAt < new Date()) {
+    throw new InvalidRefreshTokenError();
+  }
+
+  // Atomically claim this token: the WHERE clause requires revokedAt to still be
+  // null, so if two concurrent requests race to refresh the same token, only one
+  // `updateMany` can possibly match and revoke it. This closes the check-then-act
+  // race that existed when "is it revoked?" was a separate read from the write.
+  const claim = await prisma.refreshToken.updateMany({
+    where: { id: tokenRow.id, revokedAt: null },
+    data: { revokedAt: new Date() },
+  });
+
+  if (claim.count === 0) {
+    // Someone else already claimed/revoked this token first (or it was already
+    // revoked, e.g. via logout) — reuse detected, treat as compromise.
     await prisma.refreshToken.updateMany({
       where: { userId: tokenRow.userId, revokedAt: null },
       data: { revokedAt: new Date() },
@@ -100,25 +122,14 @@ export async function refresh(refreshToken: string): Promise<AuthTokens> {
     throw new InvalidRefreshTokenError();
   }
 
-  if (tokenRow.expiresAt < new Date()) {
-    throw new InvalidRefreshTokenError();
-  }
-
   const newRawToken = generateRefreshToken();
-
-  await prisma.$transaction([
-    prisma.refreshToken.update({
-      where: { id: tokenRow.id },
-      data: { revokedAt: new Date() },
-    }),
-    prisma.refreshToken.create({
-      data: {
-        userId: tokenRow.userId,
-        tokenHash: hashToken(newRawToken),
-        expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL_MS),
-      },
-    }),
-  ]);
+  await prisma.refreshToken.create({
+    data: {
+      userId: tokenRow.userId,
+      tokenHash: hashToken(newRawToken),
+      expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL_MS),
+    },
+  });
 
   const accessToken = signAccessToken(tokenRow.userId);
 

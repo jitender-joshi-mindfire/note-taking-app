@@ -68,6 +68,11 @@ logout, the revoked refresh token MUST NOT be usable to obtain a new access toke
   refresh token in the body is valid
 - **THEN** the system rejects with 401 and does not revoke the refresh token
 
+#### Scenario: Logout with another user's refresh token is rejected
+- **WHEN** a client presents a valid access token for User A together with a refresh token that
+  belongs to User B
+- **THEN** the system rejects with 401 and does not revoke User B's refresh token
+
 ### Requirement: Refresh Token Rotation and Reuse Detection
 The system SHALL rotate the refresh token on every successful use: the presented token is
 revoked and a new refresh token is issued in the same response. If a refresh token that has
