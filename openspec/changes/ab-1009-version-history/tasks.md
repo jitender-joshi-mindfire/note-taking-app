@@ -1,12 +1,13 @@
 ## 1. Foundation
 
-- [ ] 1.1 Add `packages/shared/src/versions.ts`: `NoteVersionSummary` (design.md Shared Schemas);
+- [x] 1.1 Add `packages/shared/src/versions.ts`: `NoteVersionSummary` (design.md Shared Schemas);
       export from `packages/shared/src/index.ts`
-- [ ] 1.2 Confirm no `backend/prisma/schema.prisma` change is needed — `NoteVersion` already has
-      every column this ticket uses
-- [ ] 1.3 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test` → all
-      green. Unlike AB-1006/1008, no sequencing gap is expected here — `NoteVersionSummary` is a
-      standalone new type, not a required field added to an existing shared type
+- [x] 1.2 Confirmed no `backend/prisma/schema.prisma` change is needed — `NoteVersion` already
+      has every column this ticket uses
+- [x] 1.3 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0` clean,
+      `pnpm --filter backend test` → 90/90 green. As predicted, no sequencing gap this time —
+      `NoteVersionSummary` is a standalone new type, not a required field added to an existing
+      shared type
 
 ## 2. Core Implementation
 
