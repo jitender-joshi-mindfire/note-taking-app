@@ -149,9 +149,10 @@ to the actual `schema.prisma` since AB-1002 didn't need it).
 ## Risks / Trade-offs
 
 - **[Risk] Fixed time-floor (Decision 2) adds latency to every forgot-password request**, even
-  fast ones → Mitigation: floor is small (50ms) relative to network latency; acceptable trade-off
-  for closing the enumeration side-channel, consistent with the priority AB-1002's review placed
-  on this exact class of issue.
+  fast ones → Mitigation: floor (200ms, raised from an initial 50ms during `/review` — see
+  Decision 2's correction) is small relative to the low-frequency, non-performance-critical
+  nature of this flow; acceptable trade-off for closing the enumeration side-channel, consistent
+  with the priority AB-1002's review placed on this exact class of issue.
 - **[Risk] Deleting prior OTPs (Decision 1) means a user who lost the email/log containing their
   first OTP and requests a second loses any chance of using the first one** → Mitigation: this is
   the intended behavior per FRS 3.4.6 and the `/spec` clarification; not a bug.
