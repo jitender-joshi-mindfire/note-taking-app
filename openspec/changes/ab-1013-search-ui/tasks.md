@@ -50,26 +50,26 @@ SearchPage.test.tsx` — 12 `frontend-search` scenarios, plus a beyond-spec unit
 `searchSnippet.ts` (design.md flags its regex-based parsing as load-bearing and worth testing
 directly, not just indirectly through page-level rendering):
 
-- [ ] 3.1 Test (beyond spec): `parseSnippet` returns a single unhighlighted segment for plain
+- [x] 3.1 Test (beyond spec): `parseSnippet` returns a single unhighlighted segment for plain
       text with no `<mark>` tags
-- [ ] 3.2 Test (beyond spec): `parseSnippet` extracts a `<mark>`-wrapped segment as highlighted,
+- [x] 3.2 Test (beyond spec): `parseSnippet` extracts a `<mark>`-wrapped segment as highlighted,
       correctly interleaved with the surrounding plain-text segments
-- [ ] 3.3 Test (beyond spec): `parseSnippet` handles multiple separate highlighted segments in
+- [x] 3.3 Test (beyond spec): `parseSnippet` handles multiple separate highlighted segments in
       one snippet
-- [ ] 3.4 Test: Clicking Search from the notes list navigates to the search page
-- [ ] 3.5 Test: Typing a query triggers a search after the debounce interval
-- [ ] 3.6 Test: An empty query does not trigger a search
-- [ ] 3.7 Test: Rapid typing produces only one search request
-- [ ] 3.8 Test: Search results show matching notes with their tags and updated time
-- [ ] 3.9 Test: Matched keywords in a snippet are visually highlighted
-- [ ] 3.10 Test: Before any search, an explicit prompt is shown
-- [ ] 3.11 Test: A query with no matches shows an explicit no-results message
-- [ ] 3.12 Test: Navigating to the next page requests the next page of search results
-- [ ] 3.13 Test: Previous is disabled on the first page
-- [ ] 3.14 Test: Next is disabled on the last page
-- [ ] 3.15 Test: Clicking a search result navigates to that note's editor
+- [x] 3.4 Test: Clicking Search from the notes list navigates to the search page
+- [x] 3.5 Test: Typing a query triggers a search after the debounce interval
+- [x] 3.6 Test: An empty query does not trigger a search
+- [x] 3.7 Test: Rapid typing produces only one search request
+- [x] 3.8 Test: Search results show matching notes with their tags and updated time
+- [x] 3.9 Test: Matched keywords in a snippet are visually highlighted
+- [x] 3.10 Test: Before any search, an explicit prompt is shown
+- [x] 3.11 Test: A query with no matches shows an explicit no-results message
+- [x] 3.12 Test: Navigating to the next page requests the next page of search results
+- [x] 3.13 Test: Previous is disabled on the first page
+- [x] 3.14 Test: Next is disabled on the last page
+- [x] 3.15 Test: Clicking a search result navigates to that note's editor
 
-- [ ] 3.16 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test
+- [x] 3.16 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test
       --coverage` → all green, ≥80% coverage on new files (backend 101/101 unaffected)
 
 ## 4. Archive
