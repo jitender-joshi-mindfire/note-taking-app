@@ -30,48 +30,56 @@
 
 No `[PARALLEL]` tasks — this entire ticket is frontend-only, nothing to split across worktrees.
 
-- [ ] 2.1 Create `frontend/src/lib/authStorage.ts`: `StoredSession` interface,
+- [x] 2.1 Create `frontend/src/lib/authStorage.ts`: `StoredSession` interface,
       `saveSession`/`loadSession`/`clearSession` against a single `note-app-session`
       localStorage key (Decision 1)
-- [ ] 2.2 Create `frontend/src/store/authStore.ts`: Zustand store (`session`, `login(session)`,
+- [x] 2.2 Create `frontend/src/store/authStore.ts`: Zustand store (`session`, `login(session)`,
       `logout()`) backed by `authStorage.ts` (Decision 1)
-- [ ] 2.3 Create `frontend/src/lib/authApi.ts`: `ApiError` class (`status`, `code`, `message`,
+- [x] 2.3 Create `frontend/src/lib/authApi.ts`: `ApiError` class (`status`, `code`, `message`,
       `fields?`) and `register`/`login`/`logout`/`forgotPassword`/`resetPassword` fetch
       functions against `VITE_API_BASE_URL`; `logout` attaches the `Authorization` header
-      directly (Decision 3)
-- [ ] 2.4 Create `frontend/src/components/RequireAuth.tsx` and `RedirectIfAuthed.tsx`: read
+      directly (Decision 3). Also added `frontend/src/vite-env.d.ts` to type
+      `import.meta.env.VITE_API_BASE_URL`, and `frontend/src/lib/formErrors.ts` (shared
+      Zod-issue/API-field-error grouping helper reused by all four form pages)
+- [x] 2.4 Create `frontend/src/components/RequireAuth.tsx` and `RedirectIfAuthed.tsx`: read
       `useAuthStore`, render `<Navigate>` or `children`
-- [ ] 2.5 Create `frontend/src/pages/RegisterPage.tsx`: controlled form validated with
+- [x] 2.5 Create `frontend/src/pages/RegisterPage.tsx`: controlled form validated with
       `registerSchema.safeParse` (Decision 2), `useMutation` wrapping `authApi.register`
       (Decision 4), on success calls `authStore.login(...)` and navigates to `/notes`, surfaces
       duplicate-email and field-level errors
-- [ ] 2.6 Create `frontend/src/pages/LoginPage.tsx`: same pattern as 2.5 using `loginSchema`/
+- [x] 2.6 Create `frontend/src/pages/LoginPage.tsx`: same pattern as 2.5 using `loginSchema`/
       `authApi.login`; on failure shows one generic error, never field-level
-- [ ] 2.7 Create `frontend/src/pages/ForgotPasswordPage.tsx`: email-only form using
+- [x] 2.7 Create `frontend/src/pages/ForgotPasswordPage.tsx`: email-only form using
       `forgotPasswordSchema`/`authApi.forgotPassword`; always shows the same generic
       confirmation (with the dev-mode server-console note) regardless of the API result
-- [ ] 2.8 Create `frontend/src/pages/ResetPasswordPage.tsx`: email/OTP/newPassword form using
+- [x] 2.8 Create `frontend/src/pages/ResetPasswordPage.tsx`: email/OTP/newPassword form using
       `resetPasswordSchema`/`authApi.resetPassword`; branches on the response's `error.code`
       (`EXPIRED_OTP` → 410, `INVALID_OTP` → 401, `VALIDATION_ERROR` → field errors from
       `error.fields`, per Decision 5) to show the three distinct messages; on success navigates
       to `/login` (NOT `/notes` — no session persisted, per FRS 3.4.5)
-- [ ] 2.9 Create `frontend/src/pages/NotesPlaceholderPage.tsx`: shows the logged-in user's
+- [x] 2.9 Create `frontend/src/pages/NotesPlaceholderPage.tsx`: shows the logged-in user's
       email (from `authStore`) and a logout button calling `authApi.logout` +
       `authStore.logout()` + navigate to `/login`
-- [ ] 2.10 Rewrite `frontend/src/App.tsx`: `<BrowserRouter>`/`<Routes>` for `/register`,
+- [x] 2.10 Rewrite `frontend/src/App.tsx`: `<BrowserRouter>`/`<Routes>` for `/register`,
       `/login`, `/forgot-password`, `/reset-password` (each wrapped in `RedirectIfAuthed`),
       `/notes` (wrapped in `RequireAuth`), catch-all redirect to `/login`
-- [ ] 2.11 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test` → all
-      green. Also manually smoke-test in a real browser against the running backend: register a
-      new account (confirm redirect to `/notes` and session persisted across a page reload),
-      log out (confirm redirect to `/login`), log back in, attempt registration with a
-      duplicate email (confirm the generic error), submit a weak password (confirm field
-      errors), request a password reset (confirm the generic confirmation, retrieve the OTP
-      from the backend's server console log), complete the reset with that OTP (confirm
-      redirect to `/login`, NOT an auto-logged-in `/notes`), confirm an expired/invalid OTP and
-      a weak new password each show their own distinct message, confirm visiting `/notes`
-      unauthenticated redirects to `/login` and visiting `/login` while authenticated redirects
-      to `/notes`
+- [x] 2.11 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0` clean,
+      `pnpm test` → 101/101 backend tests still green. Manually smoke-tested in a real browser
+      (via the Preview tool) against the running backend: registered a new account (confirmed
+      redirect to `/notes`, session persisted across a full page reload), logged out (confirmed
+      redirect to `/login`), confirmed unauthenticated `/notes` access redirects to `/login`,
+      attempted registration with a duplicate email (confirmed the generic backend error),
+      submitted a weak password (confirmed both violated rules listed, blocked client-side with
+      no network call), requested a password reset (confirmed the generic confirmation with the
+      dev-mode console hint, retrieved the real OTP from the backend log), submitted a wrong OTP
+      (confirmed the distinct "invalid or used" message), submitted the correct OTP with a weak
+      new password (confirmed the field error came from the API response per Decision 5, not
+      client-side Zod — the OTP was accepted, proving the two checks are properly sequenced),
+      completed the reset successfully (confirmed redirect to `/login` with a success banner,
+      NOT an auto-logged-in `/notes`), logged in with the new password (confirmed success),
+      confirmed authenticated visits to `/login` redirect to `/notes`, confirmed invalid
+      credentials show one generic error with no field distinction, confirmed zero browser
+      console warnings/errors throughout — every scenario matched the design exactly
 
 ## 3. Tests (one per spec scenario)
 
