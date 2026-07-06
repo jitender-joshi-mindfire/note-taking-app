@@ -107,6 +107,6 @@ plus one test beyond the spec's literal scenarios covering the concurrency mutex
 
 ## 4. Archive
 
-- [ ] 4.1 Run `openspec archive ab-1011-notes-list`
-- [ ] 4.2 Update `docs/TICKETS.md` AB-1011 status to `In progress` (not `Done` — that's set by
+- [x] 4.1 Run `openspec archive ab-1011-notes-list`
+- [x] 4.2 Update `docs/TICKETS.md` AB-1011 status to `In progress` (not `Done` — that's set by
       `/pr` as `PR open (#N)`, then manually after merge)
