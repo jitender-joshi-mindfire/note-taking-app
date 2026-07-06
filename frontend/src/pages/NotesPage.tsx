@@ -83,9 +83,14 @@ export function NotesPage() {
 
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Notes</h1>
-        <Button asChild>
-          <Link to="/notes/new">New note</Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button asChild variant="outline">
+            <Link to="/search">Search</Link>
+          </Button>
+          <Button asChild>
+            <Link to="/notes/new">New note</Link>
+          </Button>
+        </div>
       </div>
 
       {tagsQuery.data && tagsQuery.data.items.length > 0 && (

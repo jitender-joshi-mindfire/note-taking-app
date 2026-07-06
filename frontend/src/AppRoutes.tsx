@@ -8,6 +8,7 @@ import { NoteCreatePage } from "@/pages/NoteCreatePage";
 import { NotesPage } from "@/pages/NotesPage";
 import { RegisterPage } from "@/pages/RegisterPage";
 import { ResetPasswordPage } from "@/pages/ResetPasswordPage";
+import { SearchPage } from "@/pages/SearchPage";
 
 const NoteEditorPage = lazy(() =>
   import("@/pages/NoteEditorPage").then((module) => ({ default: module.NoteEditorPage })),
@@ -61,6 +62,14 @@ export function AppRoutes() {
         element={
           <RequireAuth>
             <NoteCreatePage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/search"
+        element={
+          <RequireAuth>
+            <SearchPage />
           </RequireAuth>
         }
       />
