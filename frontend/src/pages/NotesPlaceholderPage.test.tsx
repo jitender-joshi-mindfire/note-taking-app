@@ -48,4 +48,28 @@ describe("NotesPlaceholderPage", () => {
     });
     expect(useAuthStore.getState().session).toBeNull();
   });
+
+  it("Clears the session and navigates to login even if the backend logout call fails", async () => {
+    const user = userEvent.setup();
+    vi.mocked(authApi.logout).mockRejectedValueOnce(
+      new authApi.ApiError(401, "UNAUTHENTICATED", "Missing or invalid access token"),
+    );
+
+    useAuthStore.setState({
+      session: {
+        user: { id: "1", email: "a@b.com", createdAt: "2024-01-01T00:00:00Z" },
+        accessToken: "tok",
+        refreshToken: "rtok",
+      },
+    });
+
+    renderWithProviders(<AppRoutes />, ["/notes"]);
+
+    await user.click(screen.getByRole("button", { name: "Log out" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Enter your email and password.")).toBeInTheDocument();
+    });
+    expect(useAuthStore.getState().session).toBeNull();
+  });
 });
