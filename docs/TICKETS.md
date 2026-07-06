@@ -26,7 +26,7 @@ change; `—` means not started yet).
 | AB-1013 | Frontend — Search UI with highlights | 6.1, 6.2, 6.3 | frontend | Done ([#29](https://github.com/jitender-joshi-mindfire/note-taking-app/pull/29) merged) | [#14](https://github.com/jitender-joshi-mindfire/note-taking-app/issues/14) | `ab-1013-search-ui` (archived: `openspec/changes/archive/2026-07-06-ab-1013-search-ui/`) |
 | AB-1014 | Frontend — Share modal + active links | 7.1, 7.2, 7.3, 7.4 | frontend | Done ([#30](https://github.com/jitender-joshi-mindfire/note-taking-app/pull/30) merged) | [#15](https://github.com/jitender-joshi-mindfire/note-taking-app/issues/15) | `ab-1014-share-modal` (archived: `openspec/changes/archive/2026-07-06-ab-1014-share-modal/`) |
 | AB-1015 | Frontend — Version history drawer + restore | 8.1, 8.2, 8.3, 8.4 | frontend | Done ([#31](https://github.com/jitender-joshi-mindfire/note-taking-app/pull/31) merged) | [#16](https://github.com/jitender-joshi-mindfire/note-taking-app/issues/16) | `ab-1015-version-history-ui` |
-| AB-1016 | E2E — Playwright full user journey | all (register → note → tag → search → share → version history) | e2e | In progress | [#17](https://github.com/jitender-joshi-mindfire/note-taking-app/issues/17) | `ab-1016-e2e-playwright` |
+| AB-1016 | E2E — Playwright full user journey | all (register → note → tag → search → share → version history) | e2e | PR open ([#32](https://github.com/jitender-joshi-mindfire/note-taking-app/pull/32)) | [#17](https://github.com/jitender-joshi-mindfire/note-taking-app/issues/17) | `ab-1016-e2e-playwright` |
 
 ## Out of Scope (all tickets)
 
