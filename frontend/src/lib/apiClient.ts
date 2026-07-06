@@ -79,17 +79,9 @@ export async function authenticatedFetch<T>(path: string, options: RequestInit =
     return parseJsonOrThrow<T>(res);
   }
 
+  let tokens: AuthTokens;
   try {
-    const tokens = await refreshOnce(session.refreshToken);
-    useAuthStore.getState().login({ ...session, ...tokens });
-
-    const retryRes = await doFetch(path, options, tokens.accessToken);
-    if (retryRes.status === 401) {
-      useAuthStore.getState().logout();
-      throw new ApiError(401, "SESSION_EXPIRED", "Session expired");
-    }
-
-    return parseJsonOrThrow<T>(retryRes);
+    tokens = await refreshOnce(session.refreshToken);
   } catch (err) {
     useAuthStore.getState().logout();
     if (err instanceof ApiError) {
@@ -97,4 +89,14 @@ export async function authenticatedFetch<T>(path: string, options: RequestInit =
     }
     throw new ApiError(401, "SESSION_EXPIRED", "Session expired");
   }
+
+  useAuthStore.getState().login({ ...session, ...tokens });
+
+  const retryRes = await doFetch(path, options, tokens.accessToken);
+  if (retryRes.status === 401) {
+    useAuthStore.getState().logout();
+    throw new ApiError(401, "SESSION_EXPIRED", "Session expired");
+  }
+
+  return parseJsonOrThrow<T>(retryRes);
 }

@@ -111,6 +111,23 @@ describe("apiClient", () => {
     expect(refreshCalls).toHaveLength(1);
   });
 
+  it("A non-401 error on the retried request propagates without clearing the session", async () => {
+    setSession();
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(jsonResponse(401, { error: { code: "UNAUTHENTICATED" } }))
+      .mockResolvedValueOnce(
+        jsonResponse(200, { accessToken: "new-access-token", refreshToken: "new-refresh-token" }),
+      )
+      .mockResolvedValueOnce(jsonResponse(404, { error: { code: "NOT_FOUND" } }));
+
+    await expect(authenticatedFetch("/notes/deleted-note")).rejects.toMatchObject({
+      status: 404,
+    });
+
+    expect(useAuthStore.getState().session).not.toBeNull();
+    expect(useAuthStore.getState().session?.accessToken).toBe("new-access-token");
+  });
+
   it("Two concurrent 401s trigger exactly one refresh call", async () => {
     setSession();
 

@@ -110,3 +110,18 @@ plus one test beyond the spec's literal scenarios covering the concurrency mutex
 - [x] 4.1 Run `openspec archive ab-1011-notes-list`
 - [x] 4.2 Update `docs/TICKETS.md` AB-1011 status to `In progress` (not `Done` — that's set by
       `/pr` as `PR open (#N)`, then manually after merge)
+
+## 5. Post-archive review fix
+
+- [x] 5.1 The fresh-context reviewer sub-agent run before `/pr` found a real bug in
+      `apiClient.ts`'s post-refresh retry path: the `try/catch` wrapping the retry fetch caught
+      ANY error from `parseJsonOrThrow(retryRes)` — including a legitimate non-auth error like a
+      404 or 500 — and unconditionally called `authStore.logout()` before rethrowing. This meant
+      a token happening to expire at the exact moment a request would otherwise 404 (e.g.
+      clicking into a note deleted in another tab) wrongly wiped the user's valid session. Fixed
+      by scoping the forced logout to only the two genuine auth-failure cases (refresh itself
+      failing, or the retried request also returning 401); any other status from the retried
+      request now propagates via `parseJsonOrThrow` untouched. Added a regression test ("A
+      non-401 error on the retried request propagates without clearing the session") to
+      `apiClient.test.ts`. Re-ran the full checkpoint after the fix: build/lint clean, 34/34
+      frontend + 101/101 backend tests green, `apiClient.ts` coverage improved to 92.1%.
