@@ -3,7 +3,9 @@ import { RedirectIfAuthed } from "@/components/RedirectIfAuthed";
 import { RequireAuth } from "@/components/RequireAuth";
 import { ForgotPasswordPage } from "@/pages/ForgotPasswordPage";
 import { LoginPage } from "@/pages/LoginPage";
-import { NotesPlaceholderPage } from "@/pages/NotesPlaceholderPage";
+import { NoteCreateStubPage } from "@/pages/NoteCreateStubPage";
+import { NoteDetailStubPage } from "@/pages/NoteDetailStubPage";
+import { NotesPage } from "@/pages/NotesPage";
 import { RegisterPage } from "@/pages/RegisterPage";
 import { ResetPasswordPage } from "@/pages/ResetPasswordPage";
 
@@ -46,7 +48,23 @@ export function AppRoutes() {
         path="/notes"
         element={
           <RequireAuth>
-            <NotesPlaceholderPage />
+            <NotesPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/notes/new"
+        element={
+          <RequireAuth>
+            <NoteCreateStubPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/notes/:id"
+        element={
+          <RequireAuth>
+            <NoteDetailStubPage />
           </RequireAuth>
         }
       />
