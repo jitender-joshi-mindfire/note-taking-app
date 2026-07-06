@@ -74,6 +74,6 @@ directly, not just indirectly through page-level rendering):
 
 ## 4. Archive
 
-- [ ] 4.1 Run `openspec archive ab-1013-search-ui`
-- [ ] 4.2 Update `docs/TICKETS.md` AB-1013 status to `In progress` (not `Done` — that's set by
+- [x] 4.1 Run `openspec archive ab-1013-search-ui`
+- [x] 4.2 Update `docs/TICKETS.md` AB-1013 status to `In progress` (not `Done` — that's set by
       `/pr` as `PR open (#N)`, then manually after merge)
