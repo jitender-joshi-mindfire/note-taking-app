@@ -119,6 +119,36 @@ describe("NotesPage", () => {
     expect(screen.getByText("Content of second note")).toBeInTheDocument();
   });
 
+  it("A note with rich-text formatting shows a plain-text preview", async () => {
+    const richContent = JSON.stringify({
+      type: "doc",
+      content: [
+        {
+          type: "heading",
+          attrs: { level: 1 },
+          content: [{ type: "text", text: "Title text" }],
+        },
+        {
+          type: "paragraph",
+          content: [{ type: "text", text: "Body text", marks: [{ type: "bold" }] }],
+        },
+      ],
+    });
+    vi.mocked(notesApi.listNotes).mockResolvedValue(
+      notesResponse({
+        items: [makeNote({ id: "note-1", title: "First note", content: richContent })],
+        total: 1,
+      }),
+    );
+
+    renderWithProviders(<AppRoutes />, ["/notes"]);
+
+    expect(await screen.findByText("Title text Body text")).toBeInTheDocument();
+    expect(screen.queryByText(/\{/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/"type"/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/"content"/)).not.toBeInTheDocument();
+  });
+
   it("Empty notes list shows an explicit empty state", async () => {
     vi.mocked(notesApi.listNotes).mockResolvedValue(
       notesResponse({ items: [], total: 0 }),

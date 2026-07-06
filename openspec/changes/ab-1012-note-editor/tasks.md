@@ -80,30 +80,30 @@ for the `tiptapContent.ts` helpers (design.md Decision 1's legacy-plain-text fal
 trickiest edge case and isn't itself a top-level spec scenario, but everything else depends on
 it being correct):
 
-- [ ] 3.1 Test (beyond spec, Decision 1): `parseContent` returns valid TipTap JSON as-is
-- [ ] 3.2 Test (beyond spec, Decision 1): `parseContent` wraps non-JSON plain text as a
+- [x] 3.1 Test (beyond spec, Decision 1): `parseContent` returns valid TipTap JSON as-is
+- [x] 3.2 Test (beyond spec, Decision 1): `parseContent` wraps non-JSON plain text as a
       single-paragraph doc
-- [ ] 3.3 Test (beyond spec, Decision 1): `parseContent` returns an empty doc for empty content
-- [ ] 3.4 Test (beyond spec, Decision 1): `extractPlainText` returns the joined text of a
+- [x] 3.3 Test (beyond spec, Decision 1): `parseContent` returns an empty doc for empty content
+- [x] 3.4 Test (beyond spec, Decision 1): `extractPlainText` returns the joined text of a
       multi-node TipTap doc with no JSON syntax visible
-- [ ] 3.5 Test: Opening an existing note loads its content into the editor
-- [ ] 3.6 Test: Applying formatting updates the editor content
-- [ ] 3.7 Test: A pause in typing triggers a save
-- [ ] 3.8 Test: Rapid successive edits produce only one save request
-- [ ] 3.9 Test: Status shows "Saving..." while a save is in flight
-- [ ] 3.10 Test: Status shows "Saved" after a successful save
-- [ ] 3.11 Test: Status shows an error state if a save fails
-- [ ] 3.12 Test: Navigating back to the notes list flushes a pending save first
-- [ ] 3.13 Test: Clearing the title blocks autosave
-- [ ] 3.14 Test: Visiting the editor for an inaccessible note shows not-found
-- [ ] 3.15 Test: Visiting the new-note route creates a note and redirects to it
-- [ ] 3.16 Test: A note with rich-text formatting shows a plain-text preview (in
+- [x] 3.5 Test: Opening an existing note loads its content into the editor
+- [x] 3.6 Test: Applying formatting updates the editor content
+- [x] 3.7 Test: A pause in typing triggers a save
+- [x] 3.8 Test: Rapid successive edits produce only one save request
+- [x] 3.9 Test: Status shows "Saving..." while a save is in flight
+- [x] 3.10 Test: Status shows "Saved" after a successful save
+- [x] 3.11 Test: Status shows an error state if a save fails
+- [x] 3.12 Test: Navigating back to the notes list flushes a pending save first
+- [x] 3.13 Test: Clearing the title blocks autosave
+- [x] 3.14 Test: Visiting the editor for an inaccessible note shows not-found
+- [x] 3.15 Test: Visiting the new-note route creates a note and redirects to it
+- [x] 3.16 Test: A note with rich-text formatting shows a plain-text preview (in
       `NotesPage.test.tsx`) — also re-run the two existing `frontend-notes` scenarios ("Notes
       list renders the caller's notes", "Empty notes list shows an explicit empty state")
       unchanged to confirm the `extractPlainText` switch doesn't regress them (plain-text
       content should extract back to itself via the fallback path)
 
-- [ ] 3.17 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test
+- [x] 3.17 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test
       --coverage` → all green, ≥80% coverage on new files (backend 101/101 unaffected)
 
 ## 4. Archive
