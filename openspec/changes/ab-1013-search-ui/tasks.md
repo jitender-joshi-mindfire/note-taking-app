@@ -13,7 +13,7 @@ No `[PARALLEL]` tasks — this entire ticket is frontend-only, nothing to split 
 
 ## 2. Core Implementation
 
-- [ ] 2.1 Create `frontend/src/pages/SearchPage.tsx` (Decision 1 — declarative debounce, not
+- [x] 2.1 Create `frontend/src/pages/SearchPage.tsx` (Decision 1 — declarative debounce, not
       `NoteEditorPage`'s imperative pattern): local `useState` for `q`/`debouncedQuery`/`page`; a
       `useEffect` that debounces `q` → `debouncedQuery` after 400ms and resets `page` to 1;
       `useQuery(["search", { q: debouncedQuery, page, pageSize: 20 }], () => search(...), {
@@ -23,21 +23,25 @@ No `[PARALLEL]` tasks — this entire ticket is frontend-only, nothing to split 
       (Decision 2 — never `dangerouslySetInnerHTML`), its tags, and updated time, wrapped in a
       `<Link to="/notes/:id">`; numbered Previous/Next pagination matching `NotesPage`'s exact
       pattern, no sort control
-- [ ] 2.2 Update `frontend/src/AppRoutes.tsx`: add `/search` → `SearchPage`, wrapped in
+- [x] 2.2 Update `frontend/src/AppRoutes.tsx`: add `/search` → `SearchPage`, wrapped in
       `RequireAuth`, not lazy-loaded (Decision 3)
-- [ ] 2.3 Update `frontend/src/pages/NotesPage.tsx`: add a "Search" link next to "New note" in
+- [x] 2.3 Update `frontend/src/pages/NotesPage.tsx`: add a "Search" link next to "New note" in
       the existing header row (Decision 4)
-- [ ] 2.4 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0` (confirm no new
-      chunk-size warning, validating Decision 3), `pnpm test` → still green. Manually
-      smoke-test in a real browser (via the Preview tool) against the running backend: search
-      for a term matching an existing note, confirm via the Preview tool's network inspector
-      that exactly one `GET /search` request fires per typing pause (not one per keystroke) and
-      none fires while the input is empty; confirm the snippet's matched text is visually
-      highlighted; confirm pagination across multiple result pages; confirm the before-search
-      prompt and the no-results message are visually distinct (search for a nonsense term with
-      zero matches); click a result and confirm it opens the real note editor; click "Search"
-      from `/notes` and confirm it navigates to `/search`; confirm zero browser console
-      warnings/errors throughout
+- [x] 2.4 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0` (confirmed no new
+      chunk-size warning — main bundle 385.89 kB, unchanged `NoteEditorPage` chunk 422.73 kB,
+      validating Decision 3), `pnpm test` → still green. Manually smoke-tested in a real browser
+      (via the Preview tool) against the real backend (port 3000 occupied by a stray `kubectl
+      port-forward` again — reused the still-running port-4100 backend instance): clicked
+      "Search" from `/notes` and confirmed navigation to `/search` with the before-search
+      prompt; searched "smoke testing" and confirmed via the network inspector exactly one
+      `GET /search?q=smoke+testing&page=1&pageSize=20` request fired; confirmed 40 real `<mark>`
+      DOM elements render the matched terms (not just plain text — verified via
+      `document.querySelectorAll("mark")`, not just eyeballing); confirmed pagination ("Page 1
+      of 2" → "Page 2 of 2"); searched a nonsense term and confirmed the distinct "No notes
+      matched your search." message; cleared the input and confirmed it reverted to the
+      before-search prompt, not an error; clicked a result and confirmed it opened the real note
+      editor at `/notes/:id` with the correct title loaded; confirmed zero browser console
+      errors/warnings throughout
 
 ## 3. Tests (one per spec scenario)
 
