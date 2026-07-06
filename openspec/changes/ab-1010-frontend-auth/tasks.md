@@ -83,25 +83,35 @@ No `[PARALLEL]` tasks — this entire ticket is frontend-only, nothing to split 
 
 ## 3. Tests (one per spec scenario)
 
-New component tests under `frontend/src/pages/*.test.tsx` (or equivalent), mocking
-`frontend/src/lib/authApi.ts`'s functions via `vi.mock` — 13 scenarios:
+New component tests under `frontend/src/pages/*.test.tsx` and `frontend/src/AppRoutes.test.tsx`,
+mocking `frontend/src/lib/authApi.ts`'s functions via `vi.mock` — 13 scenarios. Also added
+`frontend/src/test/renderWithProviders.tsx` (wraps a component in `QueryClientProvider` +
+`MemoryRouter` — every page uses `useMutation`, which throws without a `QueryClient` in the
+tree) and two test-configuration fixes: `frontend/vitest.config.ts` gained the same `@` →
+`./src` resolve alias `vite.config.ts` already has (vitest doesn't inherit it automatically),
+and `frontend/src/test/setup.ts` gained an `afterEach(cleanup)` call (without
+`test.globals: true`, Testing Library's automatic cleanup between tests wasn't firing, leaking
+DOM across tests in the same file):
 
-- [ ] 3.1 Test: Successful registration navigates to the notes page
-- [ ] 3.2 Test: Duplicate email shows the generic backend error
-- [ ] 3.3 Test: Weak password shows field-level errors
-- [ ] 3.4 Test: Successful login navigates to the notes page
-- [ ] 3.5 Test: Invalid credentials show one generic error
-- [ ] 3.6 Test: Logging out clears the session and navigates to login
-- [ ] 3.7 Test: Submitting any email shows the same generic confirmation
-- [ ] 3.8 Test: Successful reset navigates to login, not notes
-- [ ] 3.9 Test: Expired OTP shows a distinct message
-- [ ] 3.10 Test: Invalid or already-used OTP shows a distinct message
-- [ ] 3.11 Test: Weak new password shows field-level errors
-- [ ] 3.12 Test: Unauthenticated visit to the notes page redirects to login
-- [ ] 3.13 Test: Authenticated visit to an auth page redirects to notes
+- [x] 3.1 Test: Successful registration navigates to the notes page
+- [x] 3.2 Test: Duplicate email shows the generic backend error
+- [x] 3.3 Test: Weak password shows field-level errors
+- [x] 3.4 Test: Successful login navigates to the notes page
+- [x] 3.5 Test: Invalid credentials show one generic error
+- [x] 3.6 Test: Logging out clears the session and navigates to login
+- [x] 3.7 Test: Submitting any email shows the same generic confirmation
+- [x] 3.8 Test: Successful reset navigates to login, not notes
+- [x] 3.9 Test: Expired OTP shows a distinct message
+- [x] 3.10 Test: Invalid or already-used OTP shows a distinct message
+- [x] 3.11 Test: Weak new password shows field-level errors
+- [x] 3.12 Test: Unauthenticated visit to the notes page redirects to login
+- [x] 3.13 Test: Authenticated visit to an auth page redirects to notes
 
-- [ ] 3.14 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`,
-      `pnpm test --coverage` → all green, ≥80% coverage on new code
+- [x] 3.14 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0` clean,
+      `pnpm test --coverage` → frontend 13/13 green (81.28% stmts / 81.46% lines — `authApi.ts`
+      itself shows lower coverage since it's mocked in every component test; its real
+      implementation was already exercised end-to-end against the live backend in the 2.11
+      manual smoke test), backend 101/101 still green and unaffected
 
 ## 4. Archive
 
