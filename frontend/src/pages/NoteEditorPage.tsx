@@ -4,6 +4,7 @@ import { useNavigate, useParams } from "react-router";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Button } from "@/components/ui/button";
+import { ShareModal } from "@/components/ShareModal";
 import { ApiError } from "@/lib/apiClient";
 import { getNote, updateNote } from "@/lib/notesApi";
 import { parseContent } from "@/lib/tiptapContent";
@@ -28,6 +29,7 @@ export function NoteEditorPage() {
 
   const [title, setTitle] = useState("");
   const [titleError, setTitleError] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const hasInitialized = useRef(false);
   const isProgrammaticUpdate = useRef(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -195,11 +197,22 @@ export function NoteEditorPage() {
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-4 p-4">
       <div className="flex items-center justify-between">
-        <Button type="button" variant="outline" onClick={handleBack}>
-          Back to notes
-        </Button>
+        <div className="flex gap-2">
+          <Button type="button" variant="outline" onClick={handleBack}>
+            Back to notes
+          </Button>
+          <Button type="button" variant="outline" onClick={() => setIsShareModalOpen(true)}>
+            Share
+          </Button>
+        </div>
         <div className="text-sm text-muted-foreground">{saveStatusText}</div>
       </div>
+
+      <ShareModal
+        note={noteQuery.data}
+        open={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+      />
 
       <input
         aria-label="Title"
