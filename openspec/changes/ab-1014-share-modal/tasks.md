@@ -2,15 +2,15 @@
 
 No `[PARALLEL]` tasks — this entire ticket is frontend-only, nothing to split across worktrees.
 
-- [ ] 1.1 Create `frontend/src/components/ui/dialog.tsx` (Decision 2): `Dialog({ open, onClose,
+- [x] 1.1 Create `frontend/src/components/ui/dialog.tsx` (Decision 2): `Dialog({ open, onClose,
       children })` — renders nothing when `!open`; otherwise an overlay `<div>` (click calls
       `onClose`) containing a panel `<div>` (click stops propagation); a `useEffect` `keydown`
       listener calls `onClose` on `Escape` while open
-- [ ] 1.2 Create `frontend/src/lib/shareApi.ts`: `generateShareLink(noteId: string, input:
+- [x] 1.2 Create `frontend/src/lib/shareApi.ts`: `generateShareLink(noteId: string, input:
       GenerateShareLinkInput): Promise<ShareLinkSummary>` (`POST /notes/:id/share`),
       `revokeShareLink(noteId: string): Promise<void>` (`DELETE /notes/:id/share`), both via
       `authenticatedFetch`
-- [ ] 1.3 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test` → 65
+- [x] 1.3 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test` → 65
       frontend + 101 backend tests still green (no new tests yet)
 
 ## 2. Core Implementation
