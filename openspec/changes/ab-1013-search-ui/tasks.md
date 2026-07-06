@@ -2,13 +2,13 @@
 
 No `[PARALLEL]` tasks — this entire ticket is frontend-only, nothing to split across worktrees.
 
-- [ ] 1.1 Create `frontend/src/lib/searchApi.ts`: `search(query: SearchQuery):
+- [x] 1.1 Create `frontend/src/lib/searchApi.ts`: `search(query: SearchQuery):
       Promise<SearchResponse>` (builds the querystring from `q`/`page`/`pageSize`) via
       `authenticatedFetch`
-- [ ] 1.2 Create `frontend/src/lib/searchSnippet.ts` (Decision 2): `parseSnippet(snippet:
+- [x] 1.2 Create `frontend/src/lib/searchSnippet.ts` (Decision 2): `parseSnippet(snippet:
       string): { text: string; highlighted: boolean }[]` — splits on
       `/(<mark>.*?<\/mark>)/g`, classifying each piece as highlighted (tags stripped) or plain
-- [ ] 1.3 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test` → 50
+- [x] 1.3 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test` → 50
       frontend + 101 backend tests still green (no new tests yet)
 
 ## 2. Core Implementation
