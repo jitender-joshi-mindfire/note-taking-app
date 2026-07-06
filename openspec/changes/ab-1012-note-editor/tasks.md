@@ -2,7 +2,7 @@
 
 No `[PARALLEL]` tasks — this entire ticket is frontend-only, nothing to split across worktrees.
 
-- [ ] 1.1 Create `frontend/src/lib/tiptapContent.ts` (Decision 1): `parseContent(content:
+- [x] 1.1 Create `frontend/src/lib/tiptapContent.ts` (Decision 1): `parseContent(content:
       string): JSONContent` — `JSON.parse`s the content; if that throws, or the result isn't a
       `{ type: "doc", ... }` node, wraps the raw string as a single-paragraph doc (`content`
       empty → `{ type: "doc", content: [] }`, otherwise `{ type: "doc", content: [{ type:
@@ -10,11 +10,11 @@ No `[PARALLEL]` tasks — this entire ticket is frontend-only, nothing to split 
       string): string` — calls `parseContent` then recursively collects every node's `text`
       field, joined by a space; `emptyContentJson(): string` — `JSON.stringify({ type: "doc",
       content: [] })`, used as the initial content for a newly auto-created note
-- [ ] 1.2 Update `frontend/src/lib/notesApi.ts`: add `createNote(input: CreateNoteInput):
+- [x] 1.2 Update `frontend/src/lib/notesApi.ts`: add `createNote(input: CreateNoteInput):
       Promise<NoteSummary>` (`POST /notes`, unwraps `{ note }`) and `updateNote(id: string,
       input: UpdateNoteInput): Promise<NoteSummary>` (`PATCH /notes/:id`, unwraps `{ note }`),
       both via `authenticatedFetch`
-- [ ] 1.3 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test` → 34
+- [x] 1.3 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test` → 34
       frontend + 101 backend tests still green (no new tests yet)
 
 ## 2. Core Implementation

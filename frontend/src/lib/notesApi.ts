@@ -1,4 +1,10 @@
-import type { ListNotesQuery, NoteListResponse, NoteSummary } from "@note-taking-app/shared";
+import type {
+  CreateNoteInput,
+  ListNotesQuery,
+  NoteListResponse,
+  NoteSummary,
+  UpdateNoteInput,
+} from "@note-taking-app/shared";
 import { authenticatedFetch } from "./apiClient";
 
 export async function listNotes(query: ListNotesQuery): Promise<NoteListResponse> {
@@ -14,5 +20,21 @@ export async function listNotes(query: ListNotesQuery): Promise<NoteListResponse
 
 export async function getNote(id: string): Promise<NoteSummary> {
   const body = await authenticatedFetch<{ note: NoteSummary }>(`/notes/${id}`);
+  return body.note;
+}
+
+export async function createNote(input: CreateNoteInput): Promise<NoteSummary> {
+  const body = await authenticatedFetch<{ note: NoteSummary }>("/notes", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+  return body.note;
+}
+
+export async function updateNote(id: string, input: UpdateNoteInput): Promise<NoteSummary> {
+  const body = await authenticatedFetch<{ note: NoteSummary }>(`/notes/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
   return body.note;
 }
