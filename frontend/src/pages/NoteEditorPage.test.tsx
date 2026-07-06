@@ -474,4 +474,39 @@ describe("NoteEditorPage", () => {
     expect(await screen.findByDisplayValue("Restored Title")).toBeInTheDocument();
     expect(await screen.findByText("Restored body")).toBeInTheDocument();
   });
+
+  it("Restoring a version clears a pending autosave so it can't overwrite the restored content afterward (beyond spec)", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const note = makeNote();
+    const version = makeVersion({ title: "Older revision" });
+    const restoredNote: NoteSummary = { ...note, title: "Older revision", content: version.content };
+    vi.mocked(notesApi.getNote).mockResolvedValue(note);
+    vi.mocked(versionsApi.listVersions).mockResolvedValue([version]);
+    vi.mocked(versionsApi.restoreVersion).mockResolvedValue(restoredNote);
+
+    renderWithProviders(<AppRoutes />, ["/notes/note-1"]);
+
+    const titleInput = await screen.findByDisplayValue("First note");
+    await user.clear(titleInput);
+    await user.type(titleInput, "Stale edit that should not survive restore");
+
+    // Still within the debounce window — the edit above has a pending, not-yet-fired autosave.
+    expect(notesApi.updateNote).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole("button", { name: "History" }));
+    await user.click(await screen.findByText("Older revision"));
+    await user.click(screen.getByRole("button", { name: "Restore" }));
+    await user.click(screen.getByRole("button", { name: "Confirm restore" }));
+
+    expect(await screen.findByDisplayValue("Older revision")).toBeInTheDocument();
+
+    // Advance well past the original debounce window — the pending autosave scheduled by
+    // the pre-restore edit must have been cleared by the restore, not merely left to fire.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(AUTOSAVE_DELAY_MS + 1000);
+    });
+
+    expect(notesApi.updateNote).not.toHaveBeenCalled();
+  });
 });

@@ -75,3 +75,18 @@ New tests under `frontend/src/components/VersionHistoryModal.test.tsx` and addit
 - [x] 4.1 Run `openspec archive ab-1015-version-history-ui`
 - [x] 4.2 Update `docs/TICKETS.md` AB-1015 status to `In progress` (not `Done` — that's set by
       `/pr` as `PR open (#N)`, then manually after merge)
+
+## 5. Post-archive review fix
+
+- [x] 5.1 The fresh-context reviewer sub-agent run before `/pr` confirmed all 5 spec scenarios,
+      design.md Decisions 3/4, and conditional mounting were correctly implemented (verdict:
+      PASS) but flagged one test-coverage gap: `handleRestored`'s `timerRef.current` clear
+      (design.md Decision 3 — the mitigation for a pending, not-yet-fired autosave silently
+      firing after a restore) had no automated regression test, only the manual browser smoke
+      test from 2.3. Added "Restoring a version clears a pending autosave so it can't overwrite
+      the restored content afterward (beyond spec)" to `NoteEditorPage.test.tsx`: schedules an
+      autosave via a title edit, restores an older version before the debounce fires, then
+      advances fake timers well past the original debounce window and asserts `updateNote` was
+      never called — this would fail if the timer-clear were ever accidentally removed. Re-ran
+      the full checkpoint after the fix: build/lint clean, 87/87 frontend + 101/101 backend tests
+      green, `NoteEditorPage.tsx` coverage improved to 93.06%.
