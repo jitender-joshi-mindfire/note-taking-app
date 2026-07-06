@@ -87,3 +87,25 @@ foundational to every scenario below, worth testing directly, not just indirectl
 - [x] 4.1 Run `openspec archive ab-1014-share-modal`
 - [x] 4.2 Update `docs/TICKETS.md` AB-1014 status to `In progress` (not `Done` — that's set by
       `/pr` as `PR open (#N)`, then manually after merge)
+
+## 5. Post-archive review fix
+
+- [x] 5.1 The fresh-context reviewer sub-agent run before `/pr` independently re-examined the
+      double-POST concern from 2.1's smoke-testing note and confirmed the prior conclusion holds
+      (no reproducible click-handler double-invocation; a more likely explanation is
+      `apiClient.ts`'s existing 401-refresh-retry legitimately issuing two real network calls for
+      one logical request when the access token happened to be expired at click time). It also
+      found a genuine, reproducible, previously-undetected bug: `NoteEditorPage.tsx` rendered
+      `<ShareModal>` **unconditionally** rather than `{isShareModalOpen && <ShareModal ... />}` as
+      design.md's Decision 1 specifies — only `Dialog`'s internal `open` check hid the modal
+      visually, so `ShareModal` stayed mounted for the entire life of the editor page and its
+      local confirmation state (`showRevokeConfirm`, `showRegenerateConfirm`, `copied`,
+      `justGenerated`, `justRevoked`) persisted across closes/reopens instead of resetting.
+      Reproducible consequence: click "Revoke", close the modal without confirming (Escape or
+      click-outside), reopen via "Share" — the modal reopened straight into the stale "Revoke
+      this link?" confirmation instead of the normal active-link view. Fixed by wrapping
+      `<ShareModal>` in the conditional render design.md always specified. Added a regression
+      test ("Reopening Share after closing mid-confirmation shows the normal state, not the stale
+      confirmation") to `NoteEditorPage.test.tsx`. Re-ran the full checkpoint after the fix:
+      build/lint clean, 80/80 frontend + 101/101 backend tests green, `NoteEditorPage.tsx`
+      coverage improved to 92.04%.

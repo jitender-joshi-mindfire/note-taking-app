@@ -371,4 +371,30 @@ describe("NoteEditorPage", () => {
 
     expect(await screen.findByText("This note has no active share link.")).toBeInTheDocument();
   });
+
+  it("Reopening Share after closing mid-confirmation shows the normal state, not the stale confirmation (beyond spec)", async () => {
+    const user = userEvent.setup();
+    const note = makeNote({ shareLink: { token: "t", url: "https://example.com/t", expiresAt: "2024-06-01T00:00:00Z", viewCount: 0 } });
+    vi.mocked(notesApi.getNote).mockResolvedValue(note);
+
+    renderWithProviders(<AppRoutes />, ["/notes/note-1"]);
+
+    await user.click(await screen.findByRole("button", { name: "Share" }));
+    await user.click(await screen.findByRole("button", { name: "Revoke" }));
+    expect(
+      screen.getByText("Revoke this link? It will stop working immediately."),
+    ).toBeInTheDocument();
+
+    await user.keyboard("{Escape}");
+    expect(
+      screen.queryByText("Revoke this link? It will stop working immediately."),
+    ).not.toBeInTheDocument();
+
+    await user.click(await screen.findByRole("button", { name: "Share" }));
+
+    expect(
+      screen.queryByText("Revoke this link? It will stop working immediately."),
+    ).not.toBeInTheDocument();
+    expect(await screen.findByText("https://example.com/t")).toBeInTheDocument();
+  });
 });

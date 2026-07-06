@@ -208,11 +208,13 @@ export function NoteEditorPage() {
         <div className="text-sm text-muted-foreground">{saveStatusText}</div>
       </div>
 
-      <ShareModal
-        note={noteQuery.data}
-        open={isShareModalOpen}
-        onClose={() => setIsShareModalOpen(false)}
-      />
+      {isShareModalOpen && (
+        <ShareModal
+          note={noteQuery.data}
+          open={isShareModalOpen}
+          onClose={() => setIsShareModalOpen(false)}
+        />
+      )}
 
       <input
         aria-label="Title"
