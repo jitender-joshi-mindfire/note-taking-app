@@ -5,19 +5,11 @@ import type {
   RegisterInput,
   ResetPasswordInput,
 } from "@note-taking-app/shared";
+import { ApiError } from "./apiClient";
+
+export { ApiError } from "./apiClient";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000/api";
-
-export class ApiError extends Error {
-  constructor(
-    public status: number,
-    public code: string,
-    message: string,
-    public fields?: { field: string; message: string }[],
-  ) {
-    super(message);
-  }
-}
 
 interface AuthResponse {
   user: AuthUser;

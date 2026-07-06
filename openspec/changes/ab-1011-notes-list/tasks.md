@@ -2,7 +2,7 @@
 
 No `[PARALLEL]` tasks — this entire ticket is frontend-only, nothing to split across worktrees.
 
-- [ ] 1.1 Create `frontend/src/lib/apiClient.ts`: move `ApiError` here (from `authApi.ts`);
+- [x] 1.1 Create `frontend/src/lib/apiClient.ts`: move `ApiError` here (from `authApi.ts`);
       implement `authenticatedFetch<T>(path, options): Promise<T>` — attaches
       `Authorization: Bearer <accessToken>` from `authStore`, parses JSON and throws `ApiError`
       on non-2xx, and on a `401` performs the silent refresh-and-retry flow (Decision 3/4): a
@@ -12,18 +12,18 @@ No `[PARALLEL]` tasks — this entire ticket is frontend-only, nothing to split 
       on refresh failure, or a second `401` on the retried request, call `authStore.logout()`
       and throw (no manual navigation — `RequireAuth`'s reactive session subscription handles the
       redirect)
-- [ ] 1.2 Update `frontend/src/lib/authApi.ts`: replace its `ApiError` definition with
+- [x] 1.2 Update `frontend/src/lib/authApi.ts`: replace its `ApiError` definition with
       `export { ApiError } from "./apiClient";` — no other changes to this file
-- [ ] 1.3 Create `frontend/src/lib/notesApi.ts`: `listNotes(query: ListNotesQuery):
+- [x] 1.3 Create `frontend/src/lib/notesApi.ts`: `listNotes(query: ListNotesQuery):
       Promise<NoteListResponse>` (builds the querystring from `page`/`pageSize`/`sortBy`/
       `sortDir`/`tagIds[]`), `getNote(id: string): Promise<NoteSummary>` (unwraps `{ note }`) —
       both via `authenticatedFetch`
-- [ ] 1.4 Create `frontend/src/lib/tagsApi.ts`: `listTags(): Promise<TagListResponse>` via
+- [x] 1.4 Create `frontend/src/lib/tagsApi.ts`: `listTags(): Promise<TagListResponse>` via
       `authenticatedFetch`
-- [ ] 1.5 Update `frontend/src/main.tsx`: set `new QueryClient({ defaultOptions: { queries: {
+- [x] 1.5 Update `frontend/src/main.tsx`: set `new QueryClient({ defaultOptions: { queries: {
       retry: 1 } } })` (Decision 3 — avoids a multi-retry delay before `RequireAuth`'s redirect
       on a genuine session-expiry failure)
-- [ ] 1.6 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test` → 101
+- [x] 1.6 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test` → 101
       backend + 14 existing frontend tests still green (no new tests yet)
 
 ## 2. Core Implementation
