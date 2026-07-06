@@ -28,7 +28,7 @@ No `[PARALLEL]` tasks — this entire ticket is frontend-only, nothing to split 
 
 ## 2. Core Implementation
 
-- [ ] 2.1 Create `frontend/src/pages/NotesPage.tsx` (replaces `NotesPlaceholderPage.tsx`,
+- [x] 2.1 Create `frontend/src/pages/NotesPage.tsx` (replaces `NotesPlaceholderPage.tsx`,
       Decision 5): keeps the existing "Logged in as {email}" line and logout button unchanged;
       adds local `useState` for `page`/`sortBy`/`sortDir`/`tagIds` (Decision 6); `useQuery(["tags"],
       listTags)` rendering each tag as a toggleable chip (`buttonVariants({ variant: "secondary"
@@ -40,23 +40,30 @@ No `[PARALLEL]` tasks — this entire ticket is frontend-only, nothing to split 
       explicit empty state when `items.length === 0`; numbered pagination controls (Previous/Next
       + "page X of Y") disabled at the first/last page per `total`/`pageSize`; each note row
       links to `/notes/:id`; a "New note" button linking to `/notes/new`
-- [ ] 2.2 Create `frontend/src/pages/NoteDetailStubPage.tsx`: reads `:id` from the route,
+- [x] 2.2 Create `frontend/src/pages/NoteDetailStubPage.tsx`: reads `:id` from the route,
       `useQuery(["note", id], () => getNote(id))`; renders the note's title/content read-only on
       success, an explicit not-found message when the query's error is an `ApiError` with
       `status === 404`
-- [ ] 2.3 Create `frontend/src/pages/NoteCreateStubPage.tsx`: static placeholder (no query, no
+- [x] 2.3 Create `frontend/src/pages/NoteCreateStubPage.tsx`: static placeholder (no query, no
       form) noting that note creation ships in AB-1012
-- [ ] 2.4 Update `frontend/src/AppRoutes.tsx`: replace the `/notes` route's element with
+- [x] 2.4 Update `frontend/src/AppRoutes.tsx`: replace the `/notes` route's element with
       `NotesPage`; add `/notes/new` → `NoteCreateStubPage` and `/notes/:id` →
       `NoteDetailStubPage`, both wrapped in `RequireAuth`, `/notes/new` listed first (Decision 5);
       delete `frontend/src/pages/NotesPlaceholderPage.tsx`
-- [ ] 2.5 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test` → still
-      green. Manually smoke-test in a real browser (via the Preview tool) against the running
-      backend: paginate through multiple pages of notes, change sort and confirm it resets to
-      page 1, toggle one and then a second tag chip and confirm AND-semantics filtering, click a
-      note and confirm the stub detail page shows its content, click "New note" and confirm the
-      stub creation page, visit a `/notes/:id` for another user's note (or a random uuid) and
-      confirm the not-found message, confirm zero browser console warnings/errors throughout
+- [x] 2.5 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test` → still
+      green. Manually smoke-tested in a real browser (via the Preview tool) against the real
+      backend (port 3000 was occupied by a stray `kubectl port-forward` again, same as prior
+      tickets — ran the backend on port 4100 for the test, restored `.env` to port 3000
+      afterward): seeded 25 notes + 2 tags via direct API calls, confirmed pagination
+      ("Page 1 of 2" → "Page 2 of 2" with the remaining 5 notes), confirmed "Work" chip filters
+      to 12 notes and adding "Personal" narrows to the 5 notes with both tags (AND semantics),
+      confirmed "Title A–Z" sort reorders and resets to page 1, clicked a note into its stub
+      detail page (title + content rendered), visited a random uuid and got "Note not found.",
+      visited `/notes/new` and got the placeholder screen, confirmed a fresh zero-note account
+      shows "No notes yet.", corrupted the stored access token and confirmed a transparent
+      silent refresh (new access token persisted, list still rendered), then corrupted both
+      tokens and confirmed a hard logout + redirect to `/login` with the session cleared —
+      zero browser console errors/warnings across every scenario
 
 ## 3. Tests (one per spec scenario)
 
