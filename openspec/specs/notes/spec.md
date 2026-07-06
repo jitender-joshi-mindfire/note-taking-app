@@ -101,8 +101,10 @@ rejected. When `tagIds` is present, it SHALL replace the note's complete set of 
 (replace-set semantics, not incremental add/remove); an empty array SHALL remove all tags. A
 `tagIds` entry that does not exist or is not owned by the caller SHALL cause the request to be
 rejected with 400 and SHALL NOT partially apply. Every update SHALL create a version snapshot of
-the note's prior state before applying the change. Updating a note not owned by the caller SHALL
-return not-found.
+the note's prior state before applying the change. The note's retained version history SHALL be
+capped at the 50 most recent versions — when creating a version would exceed that cap, the
+oldest version(s) SHALL be deleted in the same operation. Updating a note not owned by the
+caller SHALL return not-found.
 
 #### Scenario: Partial update applies only the provided fields
 - **WHEN** an authenticated client updates only `title` (or only `content`) on their own note
@@ -138,6 +140,11 @@ return not-found.
 - **WHEN** an authenticated client updates their own note with `tagIds` containing an id that
   does not exist or belongs to a different user
 - **THEN** the system rejects with 400 and does not modify the note's tags
+
+#### Scenario: Version history beyond 50 is automatically purged
+- **WHEN** an authenticated client's update would create a note's 51st version
+- **THEN** the system deletes the oldest version(s) so that no more than 50 versions remain
+  retained for that note
 
 ### Requirement: Note Soft Delete
 The system SHALL delete a note by setting a `deletedAt` timestamp only — the row itself SHALL

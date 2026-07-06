@@ -522,6 +522,29 @@ describe("PATCH /api/notes/:id", () => {
       .set("Authorization", `Bearer ${tokenA}`);
     expect(stillNote.body.note.tags).toHaveLength(0);
   });
+
+  it("Version history beyond 50 is automatically purged", async () => {
+    const token = await registerAndGetToken("ray-notes@example.com");
+
+    const created = await request(app)
+      .post("/api/notes")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ title: "Purge Note", content: "v0" });
+
+    for (let i = 0; i < 51; i++) {
+      await request(app)
+        .patch(`/api/notes/${created.body.note.id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .send({ title: `v${i}` });
+    }
+
+    const res = await request(app)
+      .get(`/api/notes/${created.body.note.id}/versions`)
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.items).toHaveLength(50);
+  });
 });
 
 describe("DELETE /api/notes/:id", () => {

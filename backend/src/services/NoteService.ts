@@ -4,6 +4,7 @@ import { prisma } from "../lib/prisma.js";
 import { buildShareUrl } from "../lib/shareUrl.js";
 
 const MAX_PAGE_SIZE = 100;
+const MAX_RETAINED_VERSIONS = 50;
 
 export class NoteNotFoundError extends Error {}
 export class InvalidTagIdsError extends Error {}
@@ -135,6 +136,17 @@ export async function updateNote(
     await tx.noteVersion.create({
       data: { noteId: note.id, title: note.title, content: note.content },
     });
+
+    const versionCount = await tx.noteVersion.count({ where: { noteId: note.id } });
+    if (versionCount > MAX_RETAINED_VERSIONS) {
+      const excess = await tx.noteVersion.findMany({
+        where: { noteId: note.id },
+        orderBy: { createdAt: "asc" },
+        take: versionCount - MAX_RETAINED_VERSIONS,
+        select: { id: true },
+      });
+      await tx.noteVersion.deleteMany({ where: { id: { in: excess.map((v) => v.id) } } });
+    }
 
     return tx.note.update({
       where: { id: note.id },
