@@ -108,6 +108,6 @@ it being correct):
 
 ## 4. Archive
 
-- [ ] 4.1 Run `openspec archive ab-1012-note-editor`
-- [ ] 4.2 Update `docs/TICKETS.md` AB-1012 status to `In progress` (not `Done` — that's set by
+- [x] 4.1 Run `openspec archive ab-1012-note-editor`
+- [x] 4.2 Update `docs/TICKETS.md` AB-1012 status to `In progress` (not `Done` — that's set by
       `/pr` as `PR open (#N)`, then manually after merge)

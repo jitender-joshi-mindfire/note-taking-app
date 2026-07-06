@@ -6,11 +6,20 @@ TBD - created by archiving change ab-1011-notes-list. Update Purpose after archi
 ### Requirement: Notes List Display
 The system SHALL display the authenticated user's own notes at `/notes`, fetched via the
 authenticated API client, showing each note's title, a content preview, its attached tags, and
-last-updated time. An empty result SHALL show an explicit empty state rather than a blank list.
+last-updated time. The content preview SHALL be plain text extracted from the note's TipTap JSON
+content (never the raw JSON string), so it remains human-readable regardless of what formatting
+the content was authored with. An empty result SHALL show an explicit empty state rather than a
+blank list.
 
 #### Scenario: Notes list renders the caller's notes
 - **WHEN** an authenticated user visits `/notes` and has one or more notes
-- **THEN** the system displays each note's title, content preview, tags, and last-updated time
+- **THEN** the system displays each note's title, a plain-text content preview, tags, and
+  last-updated time
+
+#### Scenario: A note with rich-text formatting shows a plain-text preview
+- **WHEN** a note's content includes TipTap formatting (e.g. bold text, a heading, or a list)
+- **THEN** the list preview shows the extracted plain text of that content, with no JSON syntax
+  or formatting markup visible
 
 #### Scenario: Empty notes list shows an explicit empty state
 - **WHEN** an authenticated user visits `/notes` and has no notes
@@ -66,25 +75,4 @@ matching the backend) and resets to page 1.
 #### Scenario: Toggling a chip off removes it from the filter
 - **WHEN** a user toggles an already-active tag chip off
 - **THEN** the system re-fetches notes without that tag id in `tagIds`, resetting to page 1
-
-### Requirement: Note Navigation Stubs
-The system SHALL provide a "New note" entry point navigating to `/notes/new`, and SHALL make each
-listed note clickable, navigating to `/notes/:id`. Both routes SHALL render a minimal placeholder
-page in this ticket (no create/edit functionality) — reserved for AB-1012 to implement fully. The
-`/notes/:id` stub SHALL fetch the note by id via the authenticated API client and display a
-not-found state if the note doesn't exist or isn't owned by the caller.
-
-#### Scenario: Clicking a note navigates to its stub detail page
-- **WHEN** a user clicks a note in the list
-- **THEN** the system navigates to `/notes/:id`, which fetches and shows that note's title and
-  content in a read-only placeholder
-
-#### Scenario: The "New note" button navigates to the stub creation page
-- **WHEN** a user clicks "New note"
-- **THEN** the system navigates to `/notes/new`, showing a placeholder page
-
-#### Scenario: Visiting the stub detail page for a note the caller can't access shows not-found
-- **WHEN** a user navigates to `/notes/:id` for an id that doesn't exist or belongs to another
-  user
-- **THEN** the system displays a not-found message instead of note content
 
