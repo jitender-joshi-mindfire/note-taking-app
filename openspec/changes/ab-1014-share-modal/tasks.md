@@ -64,22 +64,22 @@ ShareModal.test.tsx` — 9 `frontend-share` scenarios, plus a beyond-spec unit-t
 `Dialog` primitive itself (design.md Decision 2 — its open/close/closing-gesture behavior is
 foundational to every scenario below, worth testing directly, not just indirectly):
 
-- [ ] 3.1 Test (beyond spec): `Dialog` renders nothing when `open` is false
-- [ ] 3.2 Test (beyond spec): Clicking the overlay calls `onClose`
-- [ ] 3.3 Test (beyond spec): Pressing Escape calls `onClose`
-- [ ] 3.4 Test: Clicking Share opens the modal for the current note
-- [ ] 3.5 Test: A note with no active link shows the expiry-selection UI
-- [ ] 3.6 Test: Generating a link for a note with no existing link shows the new link
+- [x] 3.1 Test (beyond spec): `Dialog` renders nothing when `open` is false
+- [x] 3.2 Test (beyond spec): Clicking the overlay calls `onClose`
+- [x] 3.3 Test (beyond spec): Pressing Escape calls `onClose`
+- [x] 3.4 Test: Clicking Share opens the modal for the current note
+- [x] 3.5 Test: A note with no active link shows the expiry-selection UI
+- [x] 3.6 Test: Generating a link for a note with no existing link shows the new link
       immediately
-- [ ] 3.7 Test: Generating a new link when one already exists shows a confirmation first
-- [ ] 3.8 Test: Confirming the regeneration replaces the link and shows the new one
-- [ ] 3.9 Test: A note with an active link shows its URL, expiry, and view count
-- [ ] 3.10 Test: Clicking Copy copies the link and shows confirmation feedback (mock
+- [x] 3.7 Test: Generating a new link when one already exists shows a confirmation first
+- [x] 3.8 Test: Confirming the regeneration replaces the link and shows the new one
+- [x] 3.9 Test: A note with an active link shows its URL, expiry, and view count
+- [x] 3.10 Test: Clicking Copy copies the link and shows confirmation feedback (mock
       `navigator.clipboard.writeText` per design.md's disclosed jsdom risk)
-- [ ] 3.11 Test: Revoking requires confirmation before the request fires
-- [ ] 3.12 Test: Confirming revocation removes the active link and returns to the no-link state
+- [x] 3.11 Test: Revoking requires confirmation before the request fires
+- [x] 3.12 Test: Confirming revocation removes the active link and returns to the no-link state
 
-- [ ] 3.13 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test
+- [x] 3.13 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test
       --coverage` → all green, ≥80% coverage on new files (backend 101/101 unaffected)
 
 ## 4. Archive

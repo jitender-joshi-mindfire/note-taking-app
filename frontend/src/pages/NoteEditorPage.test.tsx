@@ -356,4 +356,19 @@ describe("NoteEditorPage", () => {
 
     expect(await screen.findByText("Note not found.")).toBeInTheDocument();
   });
+
+  it("Clicking Share opens the modal for the current note", async () => {
+    const user = userEvent.setup();
+    const note = makeNote();
+    vi.mocked(notesApi.getNote).mockResolvedValue(note);
+
+    renderWithProviders(<AppRoutes />, ["/notes/note-1"]);
+
+    expect(await screen.findByDisplayValue("First note")).toBeInTheDocument();
+    expect(screen.queryByText("This note has no active share link.")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Share" }));
+
+    expect(await screen.findByText("This note has no active share link.")).toBeInTheDocument();
+  });
 });
