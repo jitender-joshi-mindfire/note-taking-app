@@ -275,39 +275,6 @@ describe("NotesPage", () => {
     });
   });
 
-  it("Clicking a note navigates to its stub detail page", async () => {
-    const user = userEvent.setup();
-    const note = makeNote({ id: "note-1", title: "First note" });
-    vi.mocked(notesApi.listNotes).mockResolvedValue(
-      notesResponse({ items: [note], total: 1 }),
-    );
-    vi.mocked(notesApi.getNote).mockResolvedValue(note);
-
-    renderWithProviders(<AppRoutes />, ["/notes"]);
-
-    const noteTitle = await screen.findByText("First note");
-    const noteLink = noteTitle.closest("a");
-    if (!noteLink) {
-      throw new Error("Expected note title to be wrapped in a link");
-    }
-    await user.click(noteLink);
-
-    expect(await screen.findByText("Some note content")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "First note" })).toBeInTheDocument();
-  });
-
-  it("The \"New note\" button navigates to the stub creation page", async () => {
-    const user = userEvent.setup();
-
-    renderWithProviders(<AppRoutes />, ["/notes"]);
-
-    await user.click(await screen.findByRole("link", { name: "New note" }));
-
-    expect(
-      await screen.findByText("Note creation arrives in AB-1012 — this is a placeholder screen."),
-    ).toBeInTheDocument();
-  });
-
   it("Logging out clears the session and navigates to login", async () => {
     const user = userEvent.setup();
     vi.mocked(authApi.logout).mockResolvedValueOnce(undefined);

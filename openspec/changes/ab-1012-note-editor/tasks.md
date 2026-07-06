@@ -19,7 +19,7 @@ No `[PARALLEL]` tasks — this entire ticket is frontend-only, nothing to split 
 
 ## 2. Core Implementation
 
-- [ ] 2.1 Create `frontend/src/pages/NoteEditorPage.tsx` (replaces `NoteDetailStubPage.tsx`,
+- [x] 2.1 Create `frontend/src/pages/NoteEditorPage.tsx` (replaces `NoteDetailStubPage.tsx`,
       Decision 6): reuse the existing `useQuery(["note", id], () => getNote(id!))` + 404-retry
       suppression pattern unchanged; once loaded, initialize a TipTap `useEditor({ extensions:
       [StarterKit], content: parseContent(note.content) })` and a plain title `<input>`
@@ -32,32 +32,44 @@ No `[PARALLEL]` tasks — this entire ticket is frontend-only, nothing to split 
       saving, no PATCH sent); track and render save-status (idle/saving/saved/error) from the
       `useMutation`'s state; not-found state (`ApiError` with `status === 404`) shows a not-found
       message instead of the editor; a "Back to notes" control calls `flush()` (awaiting the
-      mutation if one is pending) then `navigate("/notes")`
-- [ ] 2.2 Create `frontend/src/pages/NoteCreatePage.tsx` (replaces `NoteCreateStubPage.tsx`,
+      mutation if one is pending) then `navigate("/notes")`. **Bug found during smoke testing**:
+      the initial `editor.commands.setContent(...)` call in the load effect itself fired
+      `onUpdate`, scheduling (and eventually sending) an unwanted autosave merely from opening a
+      note, before the user typed anything. Fixed with an `isProgrammaticUpdate` ref that brackets
+      the programmatic `setContent` call so `onUpdate` ignores it, only reacting to real user edits.
+- [x] 2.2 Create `frontend/src/pages/NoteCreatePage.tsx` (replaces `NoteCreateStubPage.tsx`,
       Decision 4): on mount, guarded by a `useRef(false)` flag against `StrictMode`'s
       double-invoke, call `createNote({ title: "Untitled", content: emptyContentJson() })`; on
       success, `navigate(`/notes/${note.id}`, { replace: true })`; on failure, show an error
       message with a "Try again" control (re-triggers the mutation) and a link back to `/notes`
-- [ ] 2.3 Update `frontend/src/pages/NotesPage.tsx`: content preview calls
+- [x] 2.3 Update `frontend/src/pages/NotesPage.tsx`: content preview calls
       `extractPlainText(note.content)` instead of using `note.content` directly
-- [ ] 2.4 Update `frontend/src/AppRoutes.tsx`: swap `/notes/:id` → `NoteEditorPage` and
-      `/notes/new` → `NoteCreatePage`; delete `frontend/src/pages/NoteDetailStubPage.tsx` and
-      `frontend/src/pages/NoteCreateStubPage.tsx`
-- [ ] 2.5 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test` → still
-      green. Manually smoke-test in a real browser (via the Preview tool) against the running
-      backend: open an existing legacy plain-text note (from AB-1011's seeded smoke-test data)
-      and confirm its text appears correctly in the editor; apply each toolbar formatting option
-      and confirm it applies; type, pause, and confirm via the Preview tool's network inspector
-      that exactly one `PATCH /notes/:id` fires per pause (not one per keystroke); confirm the
-      save-status indicator's idle → saving → saved transitions; clear the title and confirm
-      "Title is required" appears with no `PATCH` sent; retype a title and confirm autosave
-      resumes; click "New note" and confirm exactly one note is created (check the notes list
-      count before/after) despite `StrictMode`, and that it redirects to the new note's real id;
-      click "Back to notes" mid-edit (within the debounce window) and confirm the pending save
-      completes before navigating (check the notes list shows the latest edit); visit `/notes/:id`
-      for another user's note (or a random uuid) and confirm not-found; confirm the notes list
-      preview shows readable plain text (no JSON syntax) for a richly-formatted note; confirm
-      zero browser console warnings/errors throughout
+- [x] 2.4 Update `frontend/src/AppRoutes.tsx`: swap `/notes/:id` → `NoteEditorPage` (lazy-loaded
+      via `React.lazy`/`Suspense`, added after the build initially flagged a >500kB chunk-size
+      warning from TipTap's bundle weight — not in the original design, but a direct, in-scope
+      consequence of this ticket's own dependency, so fixed rather than left as a build warning)
+      and `/notes/new` → `NoteCreatePage`; delete `frontend/src/pages/NoteDetailStubPage.tsx` and
+      `frontend/src/pages/NoteCreateStubPage.tsx`; removed the two now-obsolete
+      `frontend-notes` "Note Navigation Stubs" tests from `NotesPage.test.tsx` (their replacement
+      coverage lives in the new `frontend-editor` test files, Phase 3)
+- [x] 2.5 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test` → still
+      green. Manually smoke-tested in a real browser (via the Preview tool) against the real
+      backend (port 3000 occupied by a stray `kubectl port-forward` again — reused the still-running
+      port-4100 backend instance from AB-1011's session): opened an existing legacy plain-text
+      note and confirmed its text appears correctly in the editor (Decision 1's fallback);
+      applied Bold formatting and confirmed both the rendered `<strong>` markup and the toolbar's
+      active-state styling; typed and confirmed via the Preview tool's network inspector that
+      exactly one `PATCH /notes/:id` fired after the debounce, and confirmed zero `PATCH` calls
+      from merely opening a note (this is what surfaced the bug fixed in 2.1); confirmed the
+      save-status indicator showed "Saved"; cleared the title and confirmed "Title is required"
+      with no `PATCH` sent, then restored it; clicked "Back to notes" immediately after retyping
+      the title (within the debounce window) and confirmed the rename appeared in the list
+      instantly, proving the flush fired; clicked "New note" and confirmed via a direct API call
+      that exactly one "Untitled" note was created (total count 25→26) despite `StrictMode`, and
+      that it redirected to the new note's real id; visited `/notes/:id` for a random uuid and
+      confirmed "Note not found."; confirmed the notes list preview shows readable plain text
+      (no JSON syntax) throughout; confirmed zero browser console errors/warnings across the
+      entire session
 
 ## 3. Tests (one per spec scenario)
 

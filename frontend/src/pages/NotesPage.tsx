@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { logout as logoutRequest } from "@/lib/authApi";
 import { listNotes } from "@/lib/notesApi";
 import { listTags } from "@/lib/tagsApi";
+import { extractPlainText } from "@/lib/tiptapContent";
 import { useAuthStore } from "@/store/authStore";
 
 const PAGE_SIZE = 20;
@@ -18,7 +19,8 @@ const SORT_OPTIONS = [
 ] as const;
 
 function contentPreview(content: string): string {
-  return content.length > 140 ? `${content.slice(0, 140)}…` : content;
+  const plainText = extractPlainText(content);
+  return plainText.length > 140 ? `${plainText.slice(0, 140)}…` : plainText;
 }
 
 export function NotesPage() {
