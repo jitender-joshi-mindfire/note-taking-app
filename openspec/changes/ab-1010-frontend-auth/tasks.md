@@ -1,19 +1,30 @@
 ## 1. Foundation
 
-- [ ] 1.1 Initialize shadcn/ui: add a `@/*` → `./src/*` path alias to
-      `frontend/tsconfig.json`'s `compilerOptions.paths` and mirror it in
-      `frontend/vite.config.ts`'s `resolve.alias`; create `frontend/components.json`; create
+- [x] 1.1 Initialize shadcn/ui: added a `@/*` → `./src/*` path alias to
+      `frontend/tsconfig.json`'s `compilerOptions.paths` (no `baseUrl` — deprecated in the
+      installed TS 6, `paths` alone resolves relative to the tsconfig file) and mirrored it in
+      `frontend/vite.config.ts`'s `resolve.alias`; created `frontend/components.json`; created
       `frontend/src/lib/utils.ts` (`cn()` via `clsx` + `tailwind-merge`)
-- [ ] 1.2 Generate shadcn primitives via the CLI: `Button`, `Input`, `Label`, `Card`
-- [ ] 1.3 Add `@testing-library/react`, `@testing-library/jest-dom`,
-      `@testing-library/user-event` as pinned dev dependencies; create
-      `frontend/src/test/setup.ts` importing `@testing-library/jest-dom`; wire it into
-      `frontend/vitest.config.ts`'s `test.setupFiles`
-- [ ] 1.4 Add `frontend/.env.example` with `VITE_API_BASE_URL="http://localhost:3000/api"`
-- [ ] 1.5 Add `react-router` as a pinned dependency (design.md: the v7+ unified package, no
-      separate `react-router-dom`)
-- [ ] 1.6 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test` → all
-      green
+- [x] 1.2 Generate shadcn primitives: the CLI was blocked by the corporate npm registry's auth
+      failure (confirmed via direct `curl`, not transient — a genuine 401 even with stored
+      credentials); hand-wrote `Button`, `Input`, `Label`, `Card` matching shadcn's standard
+      "new-york" style source directly (consistent with shadcn's own model — components are
+      copied into the project, the CLI is just a convenience copier), plus the theme CSS
+      variables in `frontend/src/index.css` that these components reference
+- [x] 1.3 Added `@testing-library/react`, `@testing-library/jest-dom`,
+      `@testing-library/user-event` as pinned dev dependencies (installed via
+      `npm_config_registry=https://registry.npmjs.org/` to route around the broken corporate
+      proxy — the project's own `.npmrc` already points at the public registry, but `pnpm`
+      wasn't honoring it for fresh fetches); created `frontend/src/test/setup.ts` importing
+      `@testing-library/jest-dom/vitest`; wired into `frontend/vitest.config.ts`'s
+      `test.setupFiles`
+- [x] 1.4 Added `frontend/.env.example` with `VITE_API_BASE_URL="http://localhost:3000/api"`,
+      plus a local (gitignored) `frontend/.env` copy for actual dev use
+- [x] 1.5 Added `react-router` 8.1.0 as a pinned dependency (the unified package, no separate
+      `react-router-dom`)
+- [x] 1.6 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0` clean,
+      `pnpm test` → 101/101 backend tests still green (frontend has no tests yet — expected,
+      `passWithNoTests: true`)
 
 ## 2. Core Implementation
 
