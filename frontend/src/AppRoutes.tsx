@@ -1,13 +1,17 @@
+import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router";
 import { RedirectIfAuthed } from "@/components/RedirectIfAuthed";
 import { RequireAuth } from "@/components/RequireAuth";
 import { ForgotPasswordPage } from "@/pages/ForgotPasswordPage";
 import { LoginPage } from "@/pages/LoginPage";
-import { NoteCreateStubPage } from "@/pages/NoteCreateStubPage";
-import { NoteDetailStubPage } from "@/pages/NoteDetailStubPage";
+import { NoteCreatePage } from "@/pages/NoteCreatePage";
 import { NotesPage } from "@/pages/NotesPage";
 import { RegisterPage } from "@/pages/RegisterPage";
 import { ResetPasswordPage } from "@/pages/ResetPasswordPage";
+
+const NoteEditorPage = lazy(() =>
+  import("@/pages/NoteEditorPage").then((module) => ({ default: module.NoteEditorPage })),
+);
 
 export function AppRoutes() {
   return (
@@ -56,7 +60,7 @@ export function AppRoutes() {
         path="/notes/new"
         element={
           <RequireAuth>
-            <NoteCreateStubPage />
+            <NoteCreatePage />
           </RequireAuth>
         }
       />
@@ -64,7 +68,9 @@ export function AppRoutes() {
         path="/notes/:id"
         element={
           <RequireAuth>
-            <NoteDetailStubPage />
+            <Suspense fallback={<p className="p-4">Loading editor...</p>}>
+              <NoteEditorPage />
+            </Suspense>
           </RequireAuth>
         }
       />
