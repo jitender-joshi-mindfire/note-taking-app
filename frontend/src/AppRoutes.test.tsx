@@ -16,6 +16,23 @@ vi.mock("@/lib/authApi", async (importOriginal) => {
   };
 });
 
+vi.mock("@/lib/notesApi", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/notesApi")>();
+  return {
+    ...actual,
+    listNotes: vi.fn().mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20 }),
+    getNote: vi.fn(),
+  };
+});
+
+vi.mock("@/lib/tagsApi", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/tagsApi")>();
+  return {
+    ...actual,
+    listTags: vi.fn().mockResolvedValue({ items: [] }),
+  };
+});
+
 describe("AppRoutes route protection", () => {
   beforeEach(() => {
     localStorage.clear();

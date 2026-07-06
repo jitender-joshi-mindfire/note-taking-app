@@ -73,36 +73,36 @@ NoteCreateStubPage.test.tsx` — 18 spec scenarios (5 `frontend-api-client` + 13
 plus one test beyond the spec's literal scenarios covering the concurrency mutex from Decision 3
 (flagged as a design-level risk, not a spec scenario):
 
-- [ ] 3.1 Test: A request includes the current access token
-- [ ] 3.2 Test: Expired access token triggers a silent refresh and retry
-- [ ] 3.3 Test: The retried request's response is returned to the caller
-- [ ] 3.4 Test: Refresh failure clears the session and redirects to login
-- [ ] 3.5 Test: A second 401 after a successful refresh is treated as a final failure
-- [ ] 3.6 Test (beyond spec, Decision 3): two concurrent `authenticatedFetch` calls that both
+- [x] 3.1 Test: A request includes the current access token
+- [x] 3.2 Test: Expired access token triggers a silent refresh and retry
+- [x] 3.3 Test: The retried request's response is returned to the caller
+- [x] 3.4 Test: Refresh failure clears the session and redirects to login
+- [x] 3.5 Test: A second 401 after a successful refresh is treated as a final failure
+- [x] 3.6 Test (beyond spec, Decision 3): two concurrent `authenticatedFetch` calls that both
       401 at once trigger exactly one `POST /auth/refresh` call, not two
-- [ ] 3.7 Test: Notes list renders the caller's notes
-- [ ] 3.8 Test: Empty notes list shows an explicit empty state
-- [ ] 3.9 Test: Navigating to the next page requests the next page from the backend
-- [ ] 3.10 Test: Previous is disabled on the first page
-- [ ] 3.11 Test: Next is disabled on the last page
-- [ ] 3.12 Test: Changing sort re-fetches and resets to page 1
-- [ ] 3.13 Test: Default sort matches the backend's default
-- [ ] 3.14 Test: Toggling a tag chip on filters the list
-- [ ] 3.15 Test: Toggling multiple tags requires all of them (AND semantics)
-- [ ] 3.16 Test: Toggling a chip off removes it from the filter
-- [ ] 3.17 Test: Clicking a note navigates to its stub detail page
-- [ ] 3.18 Test: The "New note" button navigates to the stub creation page
-- [ ] 3.19 Test: Visiting the stub detail page for a note the caller can't access shows
+- [x] 3.7 Test: Notes list renders the caller's notes
+- [x] 3.8 Test: Empty notes list shows an explicit empty state
+- [x] 3.9 Test: Navigating to the next page requests the next page from the backend
+- [x] 3.10 Test: Previous is disabled on the first page
+- [x] 3.11 Test: Next is disabled on the last page
+- [x] 3.12 Test: Changing sort re-fetches and resets to page 1
+- [x] 3.13 Test: Default sort matches the backend's default
+- [x] 3.14 Test: Toggling a tag chip on filters the list
+- [x] 3.15 Test: Toggling multiple tags requires all of them (AND semantics)
+- [x] 3.16 Test: Toggling a chip off removes it from the filter
+- [x] 3.17 Test: Clicking a note navigates to its stub detail page
+- [x] 3.18 Test: The "New note" button navigates to the stub creation page
+- [x] 3.19 Test: Visiting the stub detail page for a note the caller can't access shows
       not-found
-- [ ] 3.20 Rename `NotesPlaceholderPage.test.tsx` → fold its two existing logout scenarios
+- [x] 3.20 Rename `NotesPlaceholderPage.test.tsx` → fold its two existing logout scenarios
       ("Logging out clears the session and navigates to login", "...even if the backend logout
       call fails") into `NotesPage.test.tsx` unchanged — they're already-covered `frontend-auth`
       scenarios from AB-1010, not re-counted here, just relocated with the file they test
-- [ ] 3.21 Update `AppRoutes.test.tsx`: mock `@/lib/notesApi` and `@/lib/tagsApi` (same pattern
+- [x] 3.21 Update `AppRoutes.test.tsx`: mock `@/lib/notesApi` and `@/lib/tagsApi` (same pattern
       as the existing `authApi` mock) so its two existing route-protection scenarios don't make
       real network calls now that `NotesPage` issues real queries
 
-- [ ] 3.22 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test
+- [x] 3.22 Checkpoint: `pnpm build` → 0 errors, `pnpm lint --max-warnings 0`, `pnpm test
       --coverage` → all green, ≥80% coverage on new files (backend 101/101 unaffected)
 
 ## 4. Archive
