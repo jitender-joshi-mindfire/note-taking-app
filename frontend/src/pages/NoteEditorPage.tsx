@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import type { NoteSummary } from "@note-taking-app/shared";
 import { Button } from "@/components/ui/button";
 import { ShareModal } from "@/components/ShareModal";
+import { VersionHistoryModal } from "@/components/VersionHistoryModal";
 import { ApiError } from "@/lib/apiClient";
 import { getNote, updateNote } from "@/lib/notesApi";
 import { parseContent } from "@/lib/tiptapContent";
@@ -18,6 +20,7 @@ function emptyDoc() {
 export function NoteEditorPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const noteQuery = useQuery({
     queryKey: ["note", id],
@@ -30,6 +33,7 @@ export function NoteEditorPage() {
   const [title, setTitle] = useState("");
   const [titleError, setTitleError] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const hasInitialized = useRef(false);
   const isProgrammaticUpdate = useRef(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -125,6 +129,19 @@ export function NoteEditorPage() {
     scheduleSave();
   }
 
+  function handleRestored(note: NoteSummary) {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    queryClient.setQueryData(["note", id], note);
+    setTitle(note.title);
+    setTitleError(false);
+    isProgrammaticUpdate.current = true;
+    editor?.commands.setContent(parseContent(note.content));
+    isProgrammaticUpdate.current = false;
+  }
+
   async function handleBack() {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
@@ -204,6 +221,9 @@ export function NoteEditorPage() {
           <Button type="button" variant="outline" onClick={() => setIsShareModalOpen(true)}>
             Share
           </Button>
+          <Button type="button" variant="outline" onClick={() => setIsHistoryModalOpen(true)}>
+            History
+          </Button>
         </div>
         <div className="text-sm text-muted-foreground">{saveStatusText}</div>
       </div>
@@ -213,6 +233,15 @@ export function NoteEditorPage() {
           note={noteQuery.data}
           open={isShareModalOpen}
           onClose={() => setIsShareModalOpen(false)}
+        />
+      )}
+
+      {isHistoryModalOpen && (
+        <VersionHistoryModal
+          noteId={id!}
+          open={isHistoryModalOpen}
+          onClose={() => setIsHistoryModalOpen(false)}
+          onRestored={handleRestored}
         />
       )}
 

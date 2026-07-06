@@ -1,11 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { NoteListResponse, NoteSummary, TagListResponse } from "@note-taking-app/shared";
+import type {
+  NoteListResponse,
+  NoteSummary,
+  NoteVersionSummary,
+  TagListResponse,
+} from "@note-taking-app/shared";
 import { AppRoutes } from "@/AppRoutes";
 import { ApiError } from "@/lib/apiClient";
 import * as notesApi from "@/lib/notesApi";
 import * as tagsApi from "@/lib/tagsApi";
+import * as versionsApi from "@/lib/versionsApi";
 import { useAuthStore } from "@/store/authStore";
 import { renderWithProviders } from "@/test/renderWithProviders";
 
@@ -24,6 +30,15 @@ vi.mock("@/lib/tagsApi", async (importOriginal) => {
   return {
     ...actual,
     listTags: vi.fn(),
+  };
+});
+
+vi.mock("@/lib/versionsApi", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/versionsApi")>();
+  return {
+    ...actual,
+    listVersions: vi.fn(),
+    restoreVersion: vi.fn(),
   };
 });
 
@@ -53,6 +68,16 @@ function emptyTags(): TagListResponse {
   return { items: [] };
 }
 
+function makeVersion(overrides: Partial<NoteVersionSummary> = {}): NoteVersionSummary {
+  return {
+    id: "version-1",
+    title: "Version title",
+    content: JSON.stringify({ type: "doc", content: [] }),
+    createdAt: "2024-01-05T00:00:00Z",
+    ...overrides,
+  };
+}
+
 function setSession() {
   useAuthStore.setState({
     session: {
@@ -70,6 +95,7 @@ describe("NoteEditorPage", () => {
     vi.clearAllMocks();
     vi.mocked(notesApi.listNotes).mockResolvedValue(emptyNotesResponse());
     vi.mocked(tagsApi.listTags).mockResolvedValue(emptyTags());
+    vi.mocked(versionsApi.listVersions).mockResolvedValue([]);
     setSession();
   });
 
@@ -396,5 +422,91 @@ describe("NoteEditorPage", () => {
       screen.queryByText("Revoke this link? It will stop working immediately."),
     ).not.toBeInTheDocument();
     expect(await screen.findByText("https://example.com/t")).toBeInTheDocument();
+  });
+
+  it("Clicking History opens the version history view for the current note", async () => {
+    const user = userEvent.setup();
+    const note = makeNote();
+    const version = makeVersion({ title: "Older revision" });
+    vi.mocked(notesApi.getNote).mockResolvedValue(note);
+    vi.mocked(versionsApi.listVersions).mockResolvedValue([version]);
+
+    renderWithProviders(<AppRoutes />, ["/notes/note-1"]);
+
+    expect(await screen.findByDisplayValue("First note")).toBeInTheDocument();
+    expect(screen.queryByText("Version history")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "History" }));
+
+    expect(await screen.findByText("Version history")).toBeInTheDocument();
+    expect(await screen.findByText("Older revision")).toBeInTheDocument();
+  });
+
+  it("Confirming restore updates the note's live title and content in the editor", async () => {
+    const user = userEvent.setup();
+    const note = makeNote();
+    const version = makeVersion({
+      title: "Restored Title",
+      content: JSON.stringify({
+        type: "doc",
+        content: [{ type: "paragraph", content: [{ type: "text", text: "Restored body" }] }],
+      }),
+    });
+    const restoredNote: NoteSummary = {
+      ...note,
+      title: "Restored Title",
+      content: version.content,
+    };
+    vi.mocked(notesApi.getNote).mockResolvedValue(note);
+    vi.mocked(versionsApi.listVersions).mockResolvedValue([version]);
+    vi.mocked(versionsApi.restoreVersion).mockResolvedValue(restoredNote);
+
+    renderWithProviders(<AppRoutes />, ["/notes/note-1"]);
+
+    expect(await screen.findByDisplayValue("First note")).toBeInTheDocument();
+    expect(await screen.findByText("Hello world")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "History" }));
+    await user.click(await screen.findByText("Restored Title"));
+    await user.click(screen.getByRole("button", { name: "Restore" }));
+    await user.click(screen.getByRole("button", { name: "Confirm restore" }));
+
+    expect(await screen.findByDisplayValue("Restored Title")).toBeInTheDocument();
+    expect(await screen.findByText("Restored body")).toBeInTheDocument();
+  });
+
+  it("Restoring a version clears a pending autosave so it can't overwrite the restored content afterward (beyond spec)", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const note = makeNote();
+    const version = makeVersion({ title: "Older revision" });
+    const restoredNote: NoteSummary = { ...note, title: "Older revision", content: version.content };
+    vi.mocked(notesApi.getNote).mockResolvedValue(note);
+    vi.mocked(versionsApi.listVersions).mockResolvedValue([version]);
+    vi.mocked(versionsApi.restoreVersion).mockResolvedValue(restoredNote);
+
+    renderWithProviders(<AppRoutes />, ["/notes/note-1"]);
+
+    const titleInput = await screen.findByDisplayValue("First note");
+    await user.clear(titleInput);
+    await user.type(titleInput, "Stale edit that should not survive restore");
+
+    // Still within the debounce window — the edit above has a pending, not-yet-fired autosave.
+    expect(notesApi.updateNote).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole("button", { name: "History" }));
+    await user.click(await screen.findByText("Older revision"));
+    await user.click(screen.getByRole("button", { name: "Restore" }));
+    await user.click(screen.getByRole("button", { name: "Confirm restore" }));
+
+    expect(await screen.findByDisplayValue("Older revision")).toBeInTheDocument();
+
+    // Advance well past the original debounce window — the pending autosave scheduled by
+    // the pre-restore edit must have been cleared by the restore, not merely left to fire.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(AUTOSAVE_DELAY_MS + 1000);
+    });
+
+    expect(notesApi.updateNote).not.toHaveBeenCalled();
   });
 });
