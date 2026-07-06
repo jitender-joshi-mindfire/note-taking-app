@@ -181,6 +181,59 @@ describe("NoteEditorPage", () => {
     );
   });
 
+  it("An edit made while a save is still in flight queues a retry instead of overlapping it (beyond spec)", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const note = makeNote();
+    vi.mocked(notesApi.getNote).mockResolvedValue(note);
+    let resolveFirstSave: (value: NoteSummary) => void = () => {};
+    vi.mocked(notesApi.updateNote).mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveFirstSave = resolve;
+      }),
+    );
+
+    renderWithProviders(<AppRoutes />, ["/notes/note-1"]);
+
+    const titleInput = await screen.findByDisplayValue("First note");
+    await user.clear(titleInput);
+    await user.type(titleInput, "First edit");
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(AUTOSAVE_DELAY_MS);
+    });
+
+    // First save is now in flight (unresolved). Make another edit and let its
+    // debounce cycle elapse too, while the first request is still pending.
+    expect(notesApi.updateNote).toHaveBeenCalledTimes(1);
+
+    await user.type(titleInput, " plus more");
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(AUTOSAVE_DELAY_MS);
+    });
+
+    // The second debounce cycle must NOT fire a second, overlapping request —
+    // it should be queued until the first one settles.
+    expect(notesApi.updateNote).toHaveBeenCalledTimes(1);
+
+    vi.mocked(notesApi.updateNote).mockResolvedValueOnce(note);
+    await act(async () => {
+      resolveFirstSave(note);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(notesApi.updateNote).toHaveBeenCalledTimes(2);
+    });
+    expect(notesApi.updateNote).toHaveBeenNthCalledWith(
+      2,
+      "note-1",
+      expect.objectContaining({ title: "First edit plus more" }),
+    );
+  });
+
   it('Status shows "Saving..." while a save is in flight', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });

@@ -111,3 +111,21 @@ it being correct):
 - [x] 4.1 Run `openspec archive ab-1012-note-editor`
 - [x] 4.2 Update `docs/TICKETS.md` AB-1012 status to `In progress` (not `Done` — that's set by
       `/pr` as `PR open (#N)`, then manually after merge)
+
+## 5. Post-archive review fix
+
+- [x] 5.1 The fresh-context reviewer sub-agent run before `/pr` found a real race condition:
+      `triggerSave()` and `handleBack()` each called the save mutation independently with no
+      in-flight guard, so two `PATCH /notes/:id` requests could overlap if a debounce cycle (or
+      a "Back to notes" flush) fired while a prior save was still in flight (e.g. a slow network
+      response taking longer than the ~2.5s debounce interval) — whichever response arrived last
+      would "win," non-deterministically, and each overlapping save also burns an extra version
+      snapshot. Fixed by introducing a single-flight `inFlightRef` + `retryQueuedRef` pattern in
+      `NoteEditorPage.tsx`: `triggerSave()` now queues exactly one retry (using the latest
+      title/content via refs, re-checking the empty-title guard at retry time too) instead of
+      firing a second overlapping request when one is already pending; the retry chain properly
+      promise-chains so `handleBack()`'s flush correctly awaits the entire chain, including any
+      queued retry, before navigating. Added a regression test ("An edit made while a save is
+      still in flight queues a retry instead of overlapping it") to `NoteEditorPage.test.tsx`.
+      Re-ran the full checkpoint after the fix: build/lint clean, 50/50 frontend + 101/101
+      backend tests green, `NoteEditorPage.tsx` coverage improved to 91.76%.

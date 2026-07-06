@@ -31,6 +31,8 @@ export function NoteEditorPage() {
   const hasInitialized = useRef(false);
   const isProgrammaticUpdate = useRef(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inFlightRef = useRef<Promise<void> | null>(null);
+  const retryQueuedRef = useRef(false);
   const titleRef = useRef(title);
   titleRef.current = title;
 
@@ -67,14 +69,40 @@ export function NoteEditorPage() {
     };
   }, []);
 
+  function runSave(): Promise<void> {
+    const content = JSON.stringify(editor?.getJSON() ?? emptyDoc());
+    const chained = saveMutation
+      .mutateAsync({ title: titleRef.current, content })
+      .catch(() => {})
+      .then(() => {
+        inFlightRef.current = null;
+        if (retryQueuedRef.current) {
+          retryQueuedRef.current = false;
+          if (titleRef.current.trim().length > 0) {
+            setTitleError(false);
+            return runSave();
+          }
+          setTitleError(true);
+        }
+        return undefined;
+      });
+    inFlightRef.current = chained;
+    return chained;
+  }
+
   function triggerSave() {
     if (titleRef.current.trim().length === 0) {
       setTitleError(true);
       return;
     }
     setTitleError(false);
-    const content = JSON.stringify(editor?.getJSON() ?? emptyDoc());
-    saveMutation.mutate({ title: titleRef.current, content });
+    if (inFlightRef.current) {
+      // A save is already in flight — queue exactly one retry (using the latest
+      // title/content via refs) instead of firing a second, overlapping PATCH.
+      retryQueuedRef.current = true;
+      return;
+    }
+    void runSave();
   }
 
   function scheduleSave() {
@@ -99,10 +127,10 @@ export function NoteEditorPage() {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
-      if (titleRef.current.trim().length > 0) {
-        const content = JSON.stringify(editor?.getJSON() ?? emptyDoc());
-        await saveMutation.mutateAsync({ title: titleRef.current, content });
-      }
+      triggerSave();
+    }
+    if (inFlightRef.current) {
+      await inFlightRef.current;
     }
     navigate("/notes");
   }
